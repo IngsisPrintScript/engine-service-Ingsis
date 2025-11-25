@@ -1,0 +1,31 @@
+meta {
+  name: Update
+  type: http
+  seq: 2
+}
+
+put {
+  url: http://localhost:8081/linting/update
+  body: json
+  auth: inherit
+}
+
+body:json {
+  [
+     {
+      "lintId": "26717d4b-96b4-40ce-8e5c-c4630da53ff3",
+      "value": "false",
+      "active": false
+    },  
+    {
+      "lintId": "89383dc0-5a61-4e41-999a-de599cb8d62c",
+      "value": "true",
+      "active": true
+    }
+  ]
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,13 @@
+#!/bin/sh
+echo ">>> Pre-commit: ejecutando formatter + linter..."
+
+./gradlew spotlessApply
+./gradlew checkstyleMain checkstyleTest
+
+if [ $? -ne 0 ]; then
+  echo "✖ Checkstyle falló. Corrige antes de commitear."
+  exit 1
+fi
+
+echo "✔ Formatter + Linter OK."
+exit 0

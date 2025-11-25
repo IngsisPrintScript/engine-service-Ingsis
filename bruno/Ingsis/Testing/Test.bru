@@ -1,0 +1,28 @@
+meta {
+  name: Test
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8084/test/run?userId=1234
+  body: json
+  auth: inherit
+}
+
+params:query {
+  userId: 1234
+}
+
+body:json {
+  {
+    "testCaseId":"9049aef4-5596-483d-ad2b-6491ff748064",
+    "content":"println(a+b)"
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,30 @@
+meta {
+  name: CreateSnippet
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8080/snippets/create/text
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt}}
+}
+
+body:json {
+  {
+    "name": "H",
+    "description": "Un snippet básico en Java para imprimir un mensaje.",
+    "language": "python",
+    "version": "3.10",
+    "content": "println(a-b); let asasa;"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

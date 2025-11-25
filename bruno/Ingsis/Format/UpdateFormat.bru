@@ -1,0 +1,35 @@
+meta {
+  name: UpdateFormat
+  type: http
+  seq: 3
+}
+
+put {
+  url: http://localhost:8082/formater/update?ownerId=1234
+  body: json
+  auth: inherit
+}
+
+params:query {
+  ownerId: 1234
+}
+
+body:json {
+  [
+     {
+      "lintId": "139201d4-07f0-4ba2-b7b3-f192540fb071",
+      "value": "true",
+      "active": true
+    },
+    {
+      "lintId": "4cfc193e-07ec-43d4-be95-573f0f4a20ea",
+      "value": "false",
+      "active": true
+    }
+  ]
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,35 @@
+meta {
+  name: UpdateLintFromSnippet
+  type: http
+  seq: 1
+}
+
+put {
+  url: http://localhost:8080/lint/update
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt}}
+}
+
+body:json {
+  [
+    {
+      "lintId": "ef5e137b-7abf-43bc-8ff7-37c27925210e",
+      "value": "true",
+      "active": true
+    },
+    {
+      "lintId": "2243c896-6c31-4859-baa7-56234dde4c59",
+      "value": "true",
+      "active": true
+    }
+  ]
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

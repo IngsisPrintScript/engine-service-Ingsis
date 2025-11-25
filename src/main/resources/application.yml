@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: ingsis
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AUTH0_ISSUER_URI}
+  data:
+    redis:
+      host: localhost
+      port: 6378
+
+okta:
+  oauth2:
+    # Replace with the domain of your Auth0 tenant.
+    issuer: ${AUTH0_ISSUER_URI}
+    # Replace with the API Identifier for your Auth0 API.
+    audience: ${AUTH0_AUDIENCE}
+
+redis:
+  streams:
+    lintRequest: ${REDIS_STREAM_REQUEST_LINT_KEY}
+    lintResult: ${REDIS_STREAM_RESULT_LINT_KEY}
+    formatRequest: ${REDIS_STREAM_REQUEST_FORMAT_KEY}
+    formatResult: ${REDIS_STREAM_RESULT_FORMAT_KEY}
+    testRequest: ${REDIS_STREAM_REQUEST_TEST_KEY}
+    testResult: ${REDIS_STREAM_RESULT_TEST_KEY}
+  groups:
+    lint: ${REDIS_GROUP_LINT_KEY}
+    format: ${REDIS_GROUP_FORMAT_KEY}
+    test: ${REDIS_GROUP_TEST_KEY}
+
+bucket:
+  url: ${BUCKET_URL}
+
+azure:
+  storage:
+    connection-string: DefaultEndpointsProtocol=https;AccountName=${AZURE_STORAGE_ACCOUNT_NAME};AccountKey=${AZURE_STORAGE_ACCOUNT_KEY};BlobEndpoint=${AZURE_STORAGE_BLOB_ENDPOINT}

@@ -1,0 +1,11 @@
+#!/bin/sh
+echo ">>> Post-commit: ejecutando tests + coverage..."
+
+./gradlew clean test jacocoTestReport
+if [ $? -ne 0 ]; then
+  echo "✖ Tests o coverage falxlaron. Revisa antes de pushear."
+  exit 1
+fi
+
+echo "✔ Tests + Coverage OK."
+exit 0

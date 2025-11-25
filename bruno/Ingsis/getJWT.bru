@@ -1,0 +1,38 @@
+meta {
+  name: getJWT
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{issuerURI}}/oauth/token
+  body: json
+  auth: none
+}
+
+headers {
+  content-type: application/json
+}
+
+body:json {
+  {
+    "client_id": "{{clientId}}",
+    "client_secret": "{{clientSecret}}",
+    "audience": "{{audience}}",
+    "grant_type": "client_credentials"
+  }
+}
+
+script:post-response {
+  function onResponse(res) {
+    let data = res.getBody();
+    let token = bru.setEnvVar("jwt", data.access_token, { persist: true });
+  }
+  
+  onResponse(res)
+}
+
+settings {
+  encodeUrl: false
+  timeout: 0
+}

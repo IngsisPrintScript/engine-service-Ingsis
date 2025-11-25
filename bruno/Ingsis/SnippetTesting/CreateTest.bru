@@ -1,0 +1,30 @@
+meta {
+  name: CreateTest
+  type: http
+  seq: 7
+}
+
+post {
+  url: http://localhost:8080/test/create
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt}}
+}
+
+body:json {
+  {
+    "snippetId": "ff352f2a-f4b7-4fcd-938e-d04fe3c9c59f",
+    "name": "Walala",
+    "input": ["2+2","2*1","3*4"],
+    "output":["4","2","12"]
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

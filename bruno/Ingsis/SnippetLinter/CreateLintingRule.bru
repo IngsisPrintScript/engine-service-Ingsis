@@ -1,0 +1,46 @@
+meta {
+  name: CreateLintingRule
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8080/lint/create
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt}}
+}
+
+body:json {
+  [
+    {
+      "name": "readInputNoExpressionArguments",
+      "defaultValue": "true",
+      "active": true
+    },
+    {
+      "name": "snakeCase",
+      "defaultValue": "false",
+      "active": false
+    },
+    {
+      "name": "camelCase",
+      "defaultValue": "true",
+      "active": true
+    },
+    {
+      "name": "printlnNoExpressionArguments",
+      "defaultValue": "true",
+      "active": true
+    }
+  ]
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

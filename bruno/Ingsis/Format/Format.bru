@@ -1,0 +1,24 @@
+meta {
+  name: Format
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8082/formater/format
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "content": "let x:string = 10;println(a+b)",
+    "ownerId": "1234"
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

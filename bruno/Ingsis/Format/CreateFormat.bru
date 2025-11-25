@@ -1,0 +1,66 @@
+meta {
+  name: CreateFormat
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8082/formater/create?ownerId=1234
+  body: json
+  auth: inherit
+}
+
+params:query {
+  ownerId: 1234
+}
+
+body:json {
+  [
+    {
+      "name": "spaceBeforeColon",
+      "defaultValue": "true",
+      "active": true
+    },
+    {
+      "name": "spaceAfterColon",
+      "defaultValue": "false",
+      "active": true
+    },
+    {
+      "name": "spaceBetweenOperator",
+      "defaultValue": "true",
+      "active": true
+    },
+    {
+      "name": "lineJumpBeforePrintln",
+      "defaultValue": "2",
+      "active": true
+    },
+    {
+      "name": "jumpAfterSemicolon",
+      "defaultValue": "1",
+      "active": true
+    },
+    {
+      "name": "indentationSameAsIf",
+      "defaultValue": "true",
+      "active": true
+    },
+    {
+      "name": "spaceBetweenTokens",
+      "defaultValue": "true",
+      "active": true
+    },
+    {
+      "name": "keyBracketAlone",
+      "defaultValue": "true",
+      "active": true
+    }
+  ]
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

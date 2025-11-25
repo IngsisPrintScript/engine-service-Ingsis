@@ -1,0 +1,26 @@
+meta {
+  name: FormatSnippet
+  type: http
+  seq: 7
+}
+
+post {
+  url: http://localhost:8080/test/run/c6e3cd57-224f-4c97-ac67-f3059247ad62
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt}}
+}
+
+body:json {
+  {
+    "testCaseId":"63eeb6c9-3ea0-47eb-8018-387867d5d9ed"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

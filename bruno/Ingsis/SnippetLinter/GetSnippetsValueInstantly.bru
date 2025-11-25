@@ -1,0 +1,20 @@
+meta {
+  name: GetSnippetsValueInstantly
+  type: http
+  seq: 6
+}
+
+get {
+  url: http://localhost:8080/lint/status/WjgUmoHHgaqr79cGgnEyqkKPdbK5PpOv@clients
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,38 @@
+meta {
+  name: UpdateTest
+  type: http
+  seq: 3
+}
+
+put {
+  url: http://localhost:8084/test/update?userId=1234
+  body: json
+  auth: inherit
+}
+
+params:query {
+  userId: 1234
+}
+
+body:json {
+  {
+    "testId": "9049aef4-5596-483d-ad2b-6491ff748064",
+    "snippetId": "b1d2c543-78e9-4b1f-92e4-2d9a947a87b3",
+    "name": "Updated Math Function Test",
+    "inputs": [
+      "7 + 2",
+      "5 - 3",
+      "1 * 5"
+    ],
+    "outputs": [
+      "9",
+      "2",
+      "5"
+    ]
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

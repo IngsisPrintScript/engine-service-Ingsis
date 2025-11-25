@@ -1,0 +1,20 @@
+meta {
+  name: EvaluateSnippet
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:8080/lint/validate/4ab9ec0b-9170-46fb-8f30-54cf3f1f4da2
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,29 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:alpine
+    container_name: snippet-db
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    ports:
+      - "${DATABASE_PORT}:5432"
+    env_file:
+      - .env
+    volumes:
+      - db:/var/lib/postgresql/data
+
+  snippet-service:
+    build: .
+    container_name: snippet-service
+    ports:
+      - "${API_PORT}:8080"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+volumes:
+  db:
+  gradle-cache:

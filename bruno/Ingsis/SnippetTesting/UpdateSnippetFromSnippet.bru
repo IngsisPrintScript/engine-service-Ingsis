@@ -1,0 +1,38 @@
+meta {
+  name: UpdateSnippetFromSnippet
+  type: http
+  seq: 4
+}
+
+put {
+  url: http://localhost:8080/test/update
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt}}
+}
+
+body:json {
+  {
+    "testId": "2b010aba-5712-4f10-9868-06727d8e218a",
+    "snippetId": "ff352f2a-f4b7-4fcd-938e-d04fe3c9c59f",
+    "name": "Updated math test",
+    "inputs": [
+      "2+3",
+      "5-1",
+      "4*2"
+    ],
+    "outputs": [
+      "5",
+      "4",
+      "8"
+    ]
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

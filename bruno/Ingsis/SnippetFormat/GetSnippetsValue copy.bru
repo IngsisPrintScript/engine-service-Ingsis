@@ -1,0 +1,20 @@
+meta {
+  name: GetSnippetsValue copy
+  type: http
+  seq: 7
+}
+
+get {
+  url: http://localhost:8080/lint/snippets/lint-status
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

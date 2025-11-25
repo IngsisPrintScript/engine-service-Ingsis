@@ -1,0 +1,66 @@
+meta {
+  name: CreateFormatRule
+  type: http
+  seq: 7
+}
+
+post {
+  url: http://localhost:8080/format/create
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt}}
+}
+
+body:json {
+  [
+    {
+      "name": "spaceBeforeColon",
+      "defaultValue": "true",
+      "active": true
+    },
+    {
+      "name": "spaceAfterColon",
+      "defaultValue": "false",
+      "active": true
+    },
+    {
+      "name": "spaceBetweenOperator",
+      "defaultValue": "true",
+      "active": true
+    },
+    {
+      "name": "lineJumpBeforePrintln",
+      "defaultValue": "2",
+      "active": true
+    },
+    {
+      "name": "jumpAfterSemicolon",
+      "defaultValue": "1",
+      "active": true
+    },
+    {
+      "name": "indentationSameAsIf",
+      "defaultValue": "true",
+      "active": true
+    },
+    {
+      "name": "spaceBetweenTokens",
+      "defaultValue": "true",
+      "active": true
+    },
+    {
+      "name": "keyBracketAlone",
+      "defaultValue": "true",
+      "active": true
+    }
+  ]
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
