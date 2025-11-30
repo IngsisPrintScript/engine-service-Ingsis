@@ -2,15 +2,14 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.6'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'com.diffplug.spotless' version '6.25.0'
 	id 'jacoco'
 	id 'checkstyle'
-	id 'com.diffplug.spotless' version '6.25.0'
-    id 'org.jetbrains.kotlin.jvm'
 }
 
 group = 'com.ingsis'
 version = '0.0.1-SNAPSHOT'
-description = 'Snippet Service for Ingsis'
+description = 'Linting Service for Ingsis'
 
 java {
 	toolchain {
@@ -20,79 +19,47 @@ java {
 
 repositories {
 	mavenCentral()
-	maven {
-		name = "GitHubPackages"
-		url = uri("https://maven.pkg.github.com/austral-ingsis/*")
-		credentials {
-			username = project.findProperty("USERNAME") ?: System.getenv("USERNAME")
-			password = project.findProperty("TOKEN") ?: System.getenv("TOKEN")
-		}
-	}
-	maven {
-		name = "PrintScriptPackages"
-		url = uri("https://maven.pkg.github.com/IngsisPrintScript/PrintScript")
-		credentials {
-			username = project.findProperty("USERNAME") ?: System.getenv("USERNAME")
-			password = project.findProperty("TOKEN") ?: System.getenv("TOKEN")
-		}
-	}
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/austral-ingsis/*")
+        credentials {
+            username = findProperty("gpr.user")
+            password = findProperty("gpr.key")
+        }
+    }
 }
 
+
 dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-batch'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	//implementation 'org.springframework.boot:spring-boot-starter-security'
+//	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+	//implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+
 	runtimeOnly 'org.postgresql:postgresql'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-	implementation 'com.ingsis:com.ingsis.runtime:1.0.0-aa81d23'
-	implementation 'PrintScript:com.ingsis.engine:1.0.0-aa81d23'
-
-	implementation 'com.fasterxml.jackson.core:jackson-databind'
-	implementation 'com.azure:azure-storage-blob:12.27.0'
-	implementation 'com.azure:azure-identity:1.12.2'
-
-	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1'
-	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.8.1'
-
 	implementation 'org.austral.ingsis:redis-streams-mvc:0.1.13'
 
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.16.2'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	//testImplementation 'org.springframework.security:spring-security-test'
+//	testImplementation 'org.springframework.security:spring-security-test'
 	testImplementation 'com.h2database:h2'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
-	finalizedBy tasks.jacocoTestReport
 }
 
-jacoco {
-	toolVersion = "0.8.10"
+spotless {
+    java {
+        target 'src/**/*.java'
+        googleJavaFormat('1.17.0')
+        // Puedes agregar reglas adicionales aquí si lo deseas
+    }
 }
-
-jacocoTestReport {
-	dependsOn tasks.test
-	reports {
-		xml.required = true
-		html.required = true
-	}
-}
-
-//spotless {
-//	java {
-////		googleJavaFormat()
-////		target 'src/**/*.java'
-////		indentWithSpaces(4)
-//	}
-//}
-//
-//checkstyle {
-////	toolVersion = '10.12.0'
-////	configFile = file("config/checkstyle/checkstyle.xml") //Reemplazar por nuestras checkstyles
-//}
