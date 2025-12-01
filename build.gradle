@@ -19,23 +19,23 @@ java {
 }
 
 repositories {
-	mavenCentral()
-	maven {
-		name = "GitHubPackages"
-		url = uri("https://maven.pkg.github.com/austral-ingsis/*")
-		credentials {
-			username = project.findProperty("USERNAME") ?: System.getenv("USERNAME")
-			password = project.findProperty("TOKEN") ?: System.getenv("TOKEN")
-		}
-	}
-	maven {
-		name = "PrintScriptPackages"
-		url = uri("https://maven.pkg.github.com/IngsisPrintScript/PrintScript")
-		credentials {
-			username = project.findProperty("USERNAME") ?: System.getenv("USERNAME")
-			password = project.findProperty("TOKEN") ?: System.getenv("TOKEN")
-		}
-	}
+    mavenCentral()
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/austral-ingsis/*")
+        credentials {
+            username = findProperty("gpr.user")
+            password = findProperty("gpr.key")
+        }
+    }
+    maven {
+        name = "PrintScriptPackages"
+        url = uri("https://maven.pkg.github.com/IngsisPrintScript/PrintScript")
+        credentials {
+            username = findProperty("gpr.user")
+            password = findProperty("gpr.key")
+        }
+    }
 }
 
 dependencies {
@@ -55,7 +55,6 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'com.h2database:h2'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 
 }
 
