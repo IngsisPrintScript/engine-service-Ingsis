@@ -6,11 +6,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import org.jboss.logging.MDC;
-import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.util.UUID;
+import org.jboss.logging.MDC;
+import org.springframework.stereotype.Component;
 
 @Component
 public class CorrelationIdFilter implements Filter {

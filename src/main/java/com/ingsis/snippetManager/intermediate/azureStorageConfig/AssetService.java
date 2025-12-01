@@ -1,5 +1,8 @@
 package com.ingsis.snippetManager.intermediate.azureStorageConfig;
 
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -13,11 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.UUID;
-
 @Component
 public class AssetService {
 
@@ -25,7 +23,6 @@ public class AssetService {
     private final String bucketUrl;
     private static final String CORRELATION_ID_KEY = "correlationId";
     private static final Logger logger = LoggerFactory.getLogger(AssetService.class);
-
 
     @Autowired
     public AssetService(@Value("${bucket.url}") String bucketUrl) {
@@ -37,7 +34,6 @@ public class AssetService {
         String container = "snippets";
         return bucketUrl + "/" + container + "/" + key.toString();
     }
-
 
     public ResponseEntity<String> getSnippet(UUID snippetId) {
         try {
