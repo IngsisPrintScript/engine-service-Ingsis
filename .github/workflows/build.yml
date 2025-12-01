@@ -1,12 +1,31 @@
-name: Build
-on: [push, pull_request]
+name: Build & Push Snippet Image
+on:
+  push:
+    branches: [ "dev", "main" ]
+  pull_request:
+    branches: [ "dev", "main" ]
+
+permissions:
+  contents: write
+  packages: write
+
 jobs:
-  build:
+  call-cd-prod:
+    uses: IngsisPrintScript/workflows-and-actions/.github/workflows/cd-prod.yaml@main
+    with:
+      java-version: "21"
+    secrets: inherit
+  docker:
+    needs: call-cd-prod
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up JDK 21
+
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -15,5 +34,30 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew clean build
+      - name: Configure Gradle credentials
+        run: |
+          mkdir -p ~/.gradle
+          echo "gpr.user=${{ github.actor }}" >> ~/.gradle/gradle.properties
+          echo "gpr.key=${{ secrets.GITHUB_TOKEN }}" >> ~/.gradle/gradle.properties
+
+      - name: Build JAR
+        run: |
+          chmod +x gradlew
+          ./gradlew clean bootJar
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg GITHUB_USER=${{ github.actor }} \
+            --build-arg GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} \
+            -t ghcr.io/ingsisprintscript/engine-service:dev .
+
+      - name: Push Docker image
+        run: docker push ghcr.io/ingsisprintscript/engine-service:dev

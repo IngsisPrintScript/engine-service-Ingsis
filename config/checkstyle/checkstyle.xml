@@ -11,8 +11,12 @@
     <!-- TreeWalker con checks AST -->
     <module name="TreeWalker">
         <module name="Indentation">
-            <property name="basicOffset" value="2"/>
+            <property name="basicOffset" value="4"/>
             <property name="tabWidth" value="4"/>
+        </module>
+        <module name="AvoidStarImport">
+            <property name="allowClassImports" value="false"/>
+            <property name="allowStaticMemberImports" value="false"/>
         </module>
     </module>
 </module>

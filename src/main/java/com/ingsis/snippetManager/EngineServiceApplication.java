@@ -4,9 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class SnippetServiceApplication {
+public class EngineServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SnippetServiceApplication.class, args);
+        SpringApplication.run(EngineServiceApplication.class, args);
     }
 }

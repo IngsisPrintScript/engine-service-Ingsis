@@ -1,32 +1,25 @@
 spring:
   application:
     name: ingsis
-  datasource:
-    url: ${DATABASE_URL}
-    username: ${DATABASE_USERNAME}
-    password: ${DATABASE_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${AUTH0_ISSUER_URI}
+#  security:
+#    oauth2:
+#      resourceserver:
+#        jwt:
+#          issuer-uri: ${AUTH0_ISSUER_URI}
   data:
     redis:
       host: localhost
       port: 6378
+server:
+  port: 8082
+  address: 0.0.0.0
 
-okta:
-  oauth2:
-    # Replace with the domain of your Auth0 tenant.
-    issuer: ${AUTH0_ISSUER_URI}
-    # Replace with the API Identifier for your Auth0 API.
-    audience: ${AUTH0_AUDIENCE}
+#okta:
+#  oauth2:
+#    # Replace with the domain of your Auth0 tenant.
+#    issuer: ${AUTH0_ISSUER_URI}
+#    # Replace with the API Identifier for your Auth0 API.
+#    audience: ${AUTH0_AUDIENCE}
 
 redis:
   streams:
@@ -46,4 +39,4 @@ bucket:
 
 azure:
   storage:
-    connection-string: DefaultEndpointsProtocol=https;AccountName=${AZURE_STORAGE_ACCOUNT_NAME};AccountKey=${AZURE_STORAGE_ACCOUNT_KEY};BlobEndpoint=${AZURE_STORAGE_BLOB_ENDPOINT}
+    connection-string: DefaultEndpointsProtocol=http;AccountName=${AZURE_STORAGE_ACCOUNT_NAME:devstoreaccount1};AccountKey=${AZURE_STORAGE_ACCOUNT_KEY};BlobEndpoint=${AZURE_STORAGE_BLOB_ENDPOINT:http://azurite:10000/devstoreaccount1}

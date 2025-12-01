@@ -1,18 +1,13 @@
 package com.ingsis.snippetManager.engine;
 
-import com.ingsis.snippetManager.engine.dto.RunSnippetRequestDTO;
+import com.ingsis.snippetManager.engine.supportedLanguage.PrintScriptAdapter;
+import com.ingsis.snippetManager.intermediate.azureStorageConfig.AssetService;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
 import java.util.logging.Logger;
 
 @Service
 public class PrintScriptRunnerService {
+    private final Logger logger = Logger.getLogger(PrintScriptRunnerService.class.getName());
 
-    private Logger logger = Logger.getLogger(PrintScriptRunnerService.class.getName());
-
-    public RunSnippetRequestDTO runSnippet(UUID userId, RunSnippetRequestDTO snippetDTO){
-        logger.info("Running snippet for userId: {} " + userId);
-
-    }
 }
