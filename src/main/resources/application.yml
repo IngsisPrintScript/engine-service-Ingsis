@@ -6,10 +6,6 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${AUTH0_ISSUER_URI}
-  data:
-    redis:
-      host: ${SPRING_REDIS_HOST:redis}
-      port: ${SPRING_REDIS_PORT:6379}
 server:
   port: ${API_PORT:8089}
   address: 0.0.0.0
@@ -21,16 +17,5 @@ okta:
     # Replace with the API Identifier for your Auth0 API.
     audience: ${AUTH0_AUDIENCE}
 
-redis:
-  streams:
-    testRequest: ${REDIS_STREAM_REQUEST_TEST_KEY}
-    testResult: ${REDIS_STREAM_RESULT_TEST_KEY}
-  groups:
-    test: ${REDIS_GROUP_TEST_KEY}
-
 bucket:
   url: ${BUCKET_URL}
-
-azure:
-  storage:
-    connection-string: DefaultEndpointsProtocol=http;AccountName=${AZURE_STORAGE_ACCOUNT_NAME:devstoreaccount1};AccountKey=${AZURE_STORAGE_ACCOUNT_KEY};BlobEndpoint=${AZURE_STORAGE_BLOB_ENDPOINT:http://azurite:10000/devstoreaccount1}
