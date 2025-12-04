@@ -44,7 +44,6 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-	implementation "PrintScript:com.ingsis.runtime:1.0.0-ad80526"
 	implementation 'PrintScript:com.ingsis.engine:1.0.0-ad80526'
 
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
@@ -57,8 +56,7 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     //### PRINTSCRIPT ###//
-    implementation ("PrintScript:com.ingsis.engine")
-    implementation ("PrintScript:com.ingsis.utils")
+
 }
 
 tasks.register("installGitHooks") {
