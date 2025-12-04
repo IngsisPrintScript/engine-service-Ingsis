@@ -7,7 +7,7 @@ spring:
         jwt:
           issuer-uri: ${AUTH0_ISSUER_URI}
 server:
-  port: ${API_PORT:8089}
+  port: ${API_PORT}
   address: 0.0.0.0
 
 okta:
