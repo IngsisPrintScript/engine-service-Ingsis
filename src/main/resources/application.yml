@@ -6,16 +6,34 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${AUTH0_ISSUER_URI}
+  data:
+  redis:
+    host: ${REDIS_HOST:redis}
+    port: ${REDIS_PORT:6379}  
+    
 server:
   port: ${API_PORT}
   address: 0.0.0.0
-
+  
 okta:
   oauth2:
     # Replace with the domain of your Auth0 tenant.
     issuer: ${AUTH0_ISSUER_URI}
     # Replace with the API Identifier for your Auth0 API.
     audience: ${AUTH0_AUDIENCE}
-
+    
+redis:
+  streams:
+    lintRequest: ${REDIS_STREAM_REQUEST_LINT_KEY}
+    lintResult: ${REDIS_STREAM_RESULT_LINT_KEY}
+    formatRequest: ${REDIS_STREAM_REQUEST_FORMAT_KEY}
+    formatResult: ${REDIS_STREAM_RESULT_FORMAT_KEY}
+    testRequest: ${REDIS_STREAM_REQUEST_TEST_KEY}
+    testResult: ${REDIS_STREAM_RESULT_TEST_KEY}
+  groups:
+    lint: ${REDIS_GROUP_LINT_KEY}
+    format: ${REDIS_GROUP_FORMAT_KEY}
+    test: ${REDIS_GROUP_TEST_KEY} 
+    
 bucket:
   url: ${BUCKET_URL}
