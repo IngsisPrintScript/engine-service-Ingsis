@@ -7,9 +7,9 @@ spring:
         jwt:
           issuer-uri: ${AUTH0_ISSUER_URI}
   data:
-  redis:
-    host: ${REDIS_HOST:redis}
-    port: ${REDIS_PORT:6379}  
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}  
     
 server:
   port: ${API_PORT}
@@ -37,3 +37,4 @@ redis:
     
 bucket:
   url: ${BUCKET_URL}
+
