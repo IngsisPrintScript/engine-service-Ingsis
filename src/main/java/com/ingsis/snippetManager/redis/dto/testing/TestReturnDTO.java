@@ -1,6 +1,5 @@
-package com.ingsis.snippetManager.redis.testing.dto;
+package com.ingsis.snippetManager.redis.dto.testing;
 
-import com.ingsis.snippetManager.redis.dto.SnippetTestStatus;
 import java.util.List;
 import java.util.UUID;
 

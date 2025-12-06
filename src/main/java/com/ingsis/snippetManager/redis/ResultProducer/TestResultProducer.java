@@ -1,7 +1,7 @@
-package com.ingsis.snippetManager.redis.testing;
+package com.ingsis.snippetManager.redis.ResultProducer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingsis.snippetManager.redis.dto.TestRequestEvent;
+import com.ingsis.snippetManager.redis.dto.testing.TestRequestEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,15 +10,15 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TestRequestProducer {
+public class TestResultProducer {
 
-    private static final Logger logger = LoggerFactory.getLogger(TestRequestProducer.class);
+    private static final Logger logger = LoggerFactory.getLogger(TestResultProducer.class);
 
     private final String streamName;
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
 
-    public TestRequestProducer(@Value("${redis.streams.testRequest}") String streamName,
+    public TestResultProducer(@Value("${redis.streams.testRequest}") String streamName,
             RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper) {
         this.streamName = streamName;
         this.redisTemplate = redisTemplate;

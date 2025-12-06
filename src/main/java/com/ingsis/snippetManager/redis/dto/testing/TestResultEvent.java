@@ -1,6 +1,5 @@
-package com.ingsis.snippetManager.redis.testing.dto;
+package com.ingsis.snippetManager.redis.dto.testing;
 
-import com.ingsis.snippetManager.redis.dto.SnippetTestStatus;
 import java.util.UUID;
 
 public record TestResultEvent(String userId, UUID testId, UUID snippetId, SnippetTestStatus status) {

@@ -1,4 +1,4 @@
-package com.ingsis.snippetManager.redis.testing.dto;
+package com.ingsis.snippetManager.redis.dto.testing;
 
 import java.util.UUID;
 
