@@ -11,9 +11,7 @@ public class LanguageEngineFactory {
     public Engine getEngine(SupportedLanguage language) {
         return switch (language.name()) {
             case "printscript" -> new InMemoryEngine();
-            default -> throw new IllegalArgumentException(
-                    "Language not supported: " + language
-            );
+            default -> throw new IllegalArgumentException("Language not supported: " + language);
         };
     }
 }

@@ -1,5 +1,14 @@
 package com.ingsis.snippetManager.engine;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ingsis.engine.Engine;
+import com.ingsis.engine.versions.Version;
+import com.ingsis.snippetManager.engine.dto.response.RunSnippetResponseDTO;
+import com.ingsis.snippetManager.engine.supportedLanguage.SupportedLanguage;
+import com.ingsis.snippetManager.engine.supportedRules.FormatterSupportedRules;
+import com.ingsis.snippetManager.engine.supportedRules.LintSupportedRules;
+import com.ingsis.snippetManager.intermediate.azureStorageConfig.AssetService;
+import com.ingsis.utils.result.Result;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -9,18 +18,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingsis.engine.Engine;
-import com.ingsis.engine.versions.Version;
-import com.ingsis.snippetManager.engine.dto.request.LintRequestDTO;
-import com.ingsis.snippetManager.engine.dto.response.RunSnippetResponseDTO;
-import com.ingsis.snippetManager.engine.supportedLanguage.SupportedLanguage;
-import com.ingsis.snippetManager.engine.supportedRules.FormatterSupportedRules;
-import com.ingsis.snippetManager.engine.supportedRules.LintSupportedRules;
-import com.ingsis.snippetManager.intermediate.azureStorageConfig.AssetService;
-import com.ingsis.utils.result.Result;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -35,20 +32,13 @@ public class SnippetRunnerService {
         this.languageEngineFactory = languageEngineFactory;
     }
 
-    public RunSnippetResponseDTO execute(
-            SupportedLanguage language,
-            UUID snippetId,
-            Version version
-    ) {
+    public RunSnippetResponseDTO execute(SupportedLanguage language, UUID snippetId, Version version) {
         Engine engine = languageEngineFactory.getEngine(language);
 
         ResponseEntity<String> response = assetService.getSnippet(snippetId);
 
         if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-            return new RunSnippetResponseDTO(
-                    List.of(),
-                    List.of("Snippet not found")
-            );
+            return new RunSnippetResponseDTO(List.of(), List.of("Snippet not found"));
         }
 
         InputStream input = new ByteArrayInputStream(response.getBody().getBytes());
@@ -73,10 +63,7 @@ public class SnippetRunnerService {
             System.setErr(originalErr);
         }
 
-        return new RunSnippetResponseDTO(
-                collector.getOutputs(),
-                collector.getErrors()
-        );
+        return new RunSnippetResponseDTO(collector.getOutputs(), collector.getErrors());
     }
 
     public String format(UUID snippetId, Version version, FormatterSupportedRules rules, SupportedLanguage language) {
@@ -101,7 +88,7 @@ public class SnippetRunnerService {
             return result.error();
         }
         String newContent = writer.toString();
-        return assetService.saveSnippet(snippetId,newContent).getBody();
+        return assetService.saveSnippet(snippetId, newContent).getBody();
     }
 
     public String analyze(UUID snippetId, Version version, LintSupportedRules rules, SupportedLanguage language) {

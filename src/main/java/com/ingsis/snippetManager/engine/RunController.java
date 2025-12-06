@@ -5,8 +5,6 @@ import com.ingsis.snippetManager.engine.dto.request.FormatRequestDTO;
 import com.ingsis.snippetManager.engine.dto.request.LintRequestDTO;
 import com.ingsis.snippetManager.engine.dto.request.RunSnippetRequestDTO;
 import com.ingsis.snippetManager.engine.dto.response.RunSnippetResponseDTO;
-
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,40 +23,18 @@ public class RunController {
     }
 
     @PostMapping("/execute")
-    public RunSnippetResponseDTO execute(
-            @AuthenticationPrincipal Jwt jwt,
-            @RequestBody RunSnippetRequestDTO dto
-    ) {
-        return service.execute(
-                dto.language(),
-                dto.snippetId(),
-                Version.fromString(dto.version())
-        );
+    public RunSnippetResponseDTO execute(@AuthenticationPrincipal Jwt jwt, @RequestBody RunSnippetRequestDTO dto) {
+        return service.execute(dto.language(), dto.snippetId(), Version.fromString(dto.version()));
     }
 
     @PostMapping("/format")
-    public String format(
-            @AuthenticationPrincipal Jwt jwt,
-            @RequestBody FormatRequestDTO dto
-    ) {
-        return service.format(
-                dto.snippetId(),
-                Version.fromString(dto.version()),
-                dto.formatterSupportedRules(),
-                dto.language()
-        );
+    public String format(@AuthenticationPrincipal Jwt jwt, @RequestBody FormatRequestDTO dto) {
+        return service.format(dto.snippetId(), Version.fromString(dto.version()), dto.formatterSupportedRules(),
+                dto.language());
     }
 
     @PostMapping("/analyze")
-    public String analyze(
-            @AuthenticationPrincipal Jwt jwt,
-            @RequestBody LintRequestDTO dto
-    ) {
-        return service.analyze(
-                dto.snippetId(),
-                Version.fromString(dto.version()),
-                dto.rules(),
-                dto.language()
-        );
+    public String analyze(@AuthenticationPrincipal Jwt jwt, @RequestBody LintRequestDTO dto) {
+        return service.analyze(dto.snippetId(), Version.fromString(dto.version()), dto.rules(), dto.language());
     }
 }
