@@ -1,4 +1,4 @@
-package com.ingsis.snippetManager.intermediate.azureStorageConfig.correlationId;
+package com.ingsis.snippetManager.intermediate.correlationId;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;

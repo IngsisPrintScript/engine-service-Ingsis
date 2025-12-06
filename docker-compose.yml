@@ -1,14 +1,9 @@
 services:
-  engine-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        GITHUB_USER: ${GITHUB_USER}
-        GITHUB_TOKEN: ${GITHUB_TOKEN}
+  engine:
+    build: .
     container_name: engine-service
     ports:
-      - "${API_PORT}:8089"
+      - "${API_PORT}:8088"
     env_file:
       - .env
     networks:
