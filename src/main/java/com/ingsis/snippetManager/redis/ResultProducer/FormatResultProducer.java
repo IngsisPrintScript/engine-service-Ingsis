@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.stream.ObjectRecord;
+import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -14,24 +15,37 @@ public class FormatResultProducer {
 
     private static final Logger logger = LoggerFactory.getLogger(FormatResultProducer.class);
 
-    private final String streamName;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final String streamKey;
+    private final RedisTemplate<String, String> redis;
     private final ObjectMapper objectMapper;
 
-    public FormatResultProducer(@Value("${redis.streams.formatResult}") String streamName,
-                                RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper) {
-        this.streamName = streamName;
-        this.redisTemplate = redisTemplate;
+    public FormatResultProducer(
+            @Value("${redis.streams.formatResult}") String streamKey,
+            RedisTemplate<String, String> redis,
+            ObjectMapper objectMapper
+    ) {
+        this.streamKey = streamKey;
+        this.redis = redis;
         this.objectMapper = objectMapper;
     }
+    public void emit(String jsonMessage) {
+        ObjectRecord<String, String> record =
+                StreamRecords.newRecord()
+                        .ofObject(jsonMessage)
+                        .withStreamKey(streamKey);
 
+        redis.opsForStream().add(record);
+    }
     public void publish(FormatResultEvent event) {
         try {
             String json = objectMapper.writeValueAsString(event);
-            redisTemplate.opsForStream().add(ObjectRecord.create(streamName, json));
-            logger.info("Published LintResultEvent for Snippet({})", event.snippetId().toString());
+
+            logger.info("Publishing FormatResultEvent for Snippet({})", event.snippetId());
+
+            emit(json);
+
         } catch (Exception ex) {
-            logger.error("Error publishing LintResultEvent: {}", ex.getMessage());
+            logger.error("Error publishing FormatResultEvent", ex);
         }
     }
 }
