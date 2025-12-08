@@ -3,14 +3,13 @@ package com.ingsis.snippetManager.status;
 import com.ingsis.snippetManager.redis.dto.format.FormatStatus;
 import com.ingsis.snippetManager.redis.dto.lint.LintStatus;
 import com.ingsis.snippetManager.redis.dto.testing.SnippetTestStatus;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Repository;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class RedisSnippetStatusRepository {

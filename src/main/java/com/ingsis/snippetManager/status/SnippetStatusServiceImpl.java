@@ -3,9 +3,8 @@ package com.ingsis.snippetManager.status;
 import com.ingsis.snippetManager.redis.dto.format.FormatStatus;
 import com.ingsis.snippetManager.redis.dto.lint.LintStatus;
 import com.ingsis.snippetManager.redis.dto.testing.SnippetTestStatus;
-import org.springframework.stereotype.Service;
-
 import java.util.UUID;
+import org.springframework.stereotype.Service;
 
 @Service
 public class SnippetStatusServiceImpl implements SnippetStatusService {

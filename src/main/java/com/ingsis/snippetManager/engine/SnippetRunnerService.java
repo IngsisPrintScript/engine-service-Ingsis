@@ -69,7 +69,8 @@ public class SnippetRunnerService {
         return new RunSnippetResponseDTO(collector.getOutputs(), collector.getErrors());
     }
 
-    public Result<String> format(UUID snippetId, Version version, FormatterSupportedRules rules, SupportedLanguage language) {
+    public Result<String> format(UUID snippetId, Version version, FormatterSupportedRules rules,
+            SupportedLanguage language) {
         Engine engine = languageEngineFactory.getEngine(language);
         ResponseEntity<String> response = assetService.getSnippet(snippetId);
         if (!response.getStatusCode().is2xxSuccessful()) {
@@ -94,7 +95,8 @@ public class SnippetRunnerService {
         return new CorrectResult<>(assetService.saveSnippet(snippetId, newContent).getBody());
     }
 
-    public Result<String> analyze(UUID snippetId, Version version, LintSupportedRules rules, SupportedLanguage language) {
+    public Result<String> analyze(UUID snippetId, Version version, LintSupportedRules rules,
+            SupportedLanguage language) {
         Engine engine = languageEngineFactory.getEngine(language);
 
         ResponseEntity<String> response = assetService.getSnippet(snippetId);
@@ -159,17 +161,11 @@ public class SnippetRunnerService {
         List<String> expectedOutputs = dto.outputs();
 
         if (!realOutputs.equals(expectedOutputs)) {
-            return new IncorrectResult<>(
-                    "TEST FAILED \n" +
-                            "Expected outputs: " + expectedOutputs + "\n" +
-                            "Actual outputs:   " + realOutputs
-            );
+            return new IncorrectResult<>("TEST FAILED \n" + "Expected outputs: " + expectedOutputs + "\n"
+                    + "Actual outputs:   " + realOutputs);
         }
-        return new CorrectResult<>(
-                new RunSnippetResponseDTO(realOutputs, collector.getErrors())
-        );
+        return new CorrectResult<>(new RunSnippetResponseDTO(realOutputs, collector.getErrors()));
     }
-
 
     private InputStream rulesToInputStream(FormatterSupportedRules rules) {
         try {

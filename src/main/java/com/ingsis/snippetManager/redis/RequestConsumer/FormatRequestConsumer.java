@@ -10,6 +10,9 @@ import com.ingsis.snippetManager.redis.dto.format.FormatStatus;
 import com.ingsis.snippetManager.status.SnippetStatusService;
 import com.ingsis.utils.result.Result;
 import jakarta.annotation.PreDestroy;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.austral.ingsis.redis.RedisStreamConsumer;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -20,10 +23,6 @@ import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.stream.StreamReceiver;
 import org.springframework.stereotype.Component;
-
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Component
 @Profile("!test")
@@ -39,13 +38,12 @@ public class FormatRequestConsumer extends RedisStreamConsumer<String> {
     private final RedisTemplate<String, String> redisTemplate;
 
     public FormatRequestConsumer(@Value("${redis.streams.formatRequest}") String streamName,
-                                 @Value("${redis.groups.format}") String groupName,
-                                 RedisTemplate<String, String> redisTemplate,FormatResultProducer formatResultProducer,
-                                 ObjectMapper objectMapper,SnippetRunnerService service,
-                                 SnippetStatusService snippetStatusService) {
+            @Value("${redis.groups.format}") String groupName, RedisTemplate<String, String> redisTemplate,
+            FormatResultProducer formatResultProducer, ObjectMapper objectMapper, SnippetRunnerService service,
+            SnippetStatusService snippetStatusService) {
 
         super(streamName, groupName, redisTemplate);
-        this.redisTemplate =  redisTemplate;
+        this.redisTemplate = redisTemplate;
         this.formatResultProducer = formatResultProducer;
         this.objectMapper = objectMapper;
         this.service = service;
@@ -69,12 +67,7 @@ public class FormatRequestConsumer extends RedisStreamConsumer<String> {
 
                 Version version = Version.fromString(event.version());
 
-                Result<String> formatted = service.format(
-                        snippetId,
-                        version,
-                        event.rules(),
-                        event.language()
-                );
+                Result<String> formatted = service.format(snippetId, version, event.rules(), event.language());
 
                 FormatStatus finalStatus;
 
@@ -85,21 +78,15 @@ public class FormatRequestConsumer extends RedisStreamConsumer<String> {
                     snippetStatusService.markFormatFailed(snippetId, "FORMAT_ERROR");
                     finalStatus = FormatStatus.FAILED;
                 }
-                redisTemplate.opsForStream().acknowledge(
-                        getStreamKey(),
-                        getGroupId(),
-                        record.getId()
-                );
+                redisTemplate.opsForStream().acknowledge(getStreamKey(), getGroupId(), record.getId());
                 publishWithRetry(ownerId, snippetId, finalStatus);
 
             } catch (Exception e) {
                 logger.error("[FORMAT] Fatal error processing record", e);
 
                 if (event != null) {
-                    snippetStatusService.markFormatFailed(
-                            event.snippetId(),
-                            "EXCEPTION: " + e.getClass().getSimpleName()
-                    );
+                    snippetStatusService.markFormatFailed(event.snippetId(),
+                            "EXCEPTION: " + e.getClass().getSimpleName());
                 }
             }
         });
@@ -108,16 +95,15 @@ public class FormatRequestConsumer extends RedisStreamConsumer<String> {
     private void publishWithRetry(String ownerId, UUID snippetId, FormatStatus status) {
         for (int i = 1; i <= 3; i++) {
             try {
-                formatResultProducer.publish(
-                        new FormatResultEvent(ownerId, snippetId, status)
-                );
+                formatResultProducer.publish(new FormatResultEvent(ownerId, snippetId, status));
                 return;
             } catch (Exception e) {
                 logger.warn("[FORMAT] Publish retry {} failed for Snippet({})", i, snippetId);
 
                 try {
                     Thread.sleep(1000L * i);
-                } catch (InterruptedException ignored) {}
+                } catch (InterruptedException ignored) {
+                }
             }
         }
 

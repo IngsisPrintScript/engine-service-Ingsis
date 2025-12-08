@@ -10,6 +10,9 @@ import com.ingsis.snippetManager.redis.dto.lint.LintStatus;
 import com.ingsis.snippetManager.status.SnippetStatusService;
 import com.ingsis.utils.result.Result;
 import jakarta.annotation.PreDestroy;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.austral.ingsis.redis.RedisStreamConsumer;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -20,9 +23,6 @@ import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.stream.StreamReceiver;
 import org.springframework.stereotype.Component;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Component
 @Profile("!test")
@@ -38,9 +38,9 @@ public class LintRequestConsumer extends RedisStreamConsumer<String> {
     private final RedisTemplate<String, String> redisTemplate;
 
     public LintRequestConsumer(@Value("${redis.streams.lintRequest}") String streamName,
-                               @Value("${redis.groups.lint}") String groupName, RedisTemplate<String, String> redisTemplate,
-                               SnippetRunnerService lintingService,
-                               LintResultProducer lintResultProducer, ObjectMapper objectMapper,SnippetStatusService snippetStatusService) {
+            @Value("${redis.groups.lint}") String groupName, RedisTemplate<String, String> redisTemplate,
+            SnippetRunnerService lintingService, LintResultProducer lintResultProducer, ObjectMapper objectMapper,
+            SnippetStatusService snippetStatusService) {
 
         super(streamName, groupName, redisTemplate);
         this.service = lintingService;
@@ -66,12 +66,7 @@ public class LintRequestConsumer extends RedisStreamConsumer<String> {
 
                 Version version = Version.fromString(event.version());
 
-                Result<String> response = service.analyze(
-                        snippetId,
-                        version,
-                        event.supportedRules(),
-                        event.language()
-                );
+                Result<String> response = service.analyze(snippetId, version, event.supportedRules(), event.language());
 
                 if (response.isCorrect()) {
                     snippetStatusService.markLinted(snippetId);
@@ -79,23 +74,15 @@ public class LintRequestConsumer extends RedisStreamConsumer<String> {
                     snippetStatusService.markLintFailed(snippetId, "LINT_ERRORS");
                 }
 
-                LintStatus finalStatus = response.isCorrect()
-                        ? LintStatus.PASSED
-                        : LintStatus.FAILED;
-                redisTemplate.opsForStream().acknowledge(
-                        getStreamKey(),
-                        getGroupId(),
-                        record.getId()
-                );
+                LintStatus finalStatus = response.isCorrect() ? LintStatus.PASSED : LintStatus.FAILED;
+                redisTemplate.opsForStream().acknowledge(getStreamKey(), getGroupId(), record.getId());
                 publishWithRetry(ownerId, snippetId, finalStatus);
             } catch (Exception e) {
                 logger.error("[LINT] Fatal error processing record", e);
 
                 if (event != null) {
-                    snippetStatusService.markLintFailed(
-                            event.snippetId(),
-                            "EXCEPTION: " + e.getClass().getSimpleName()
-                    );
+                    snippetStatusService.markLintFailed(event.snippetId(),
+                            "EXCEPTION: " + e.getClass().getSimpleName());
                 }
             }
         });
@@ -104,16 +91,15 @@ public class LintRequestConsumer extends RedisStreamConsumer<String> {
     private void publishWithRetry(String ownerId, UUID snippetId, LintStatus status) {
         for (int i = 1; i <= 3; i++) {
             try {
-                lintResultProducer.publish(
-                        new LintResultEvent(ownerId, snippetId, status)
-                );
+                lintResultProducer.publish(new LintResultEvent(ownerId, snippetId, status));
                 return;
             } catch (Exception e) {
                 logger.warn("[LINT] Publish retry {} failed for Snippet({})", i, snippetId);
 
                 try {
                     Thread.sleep(1000L * i);
-                } catch (InterruptedException ignored) {}
+                } catch (InterruptedException ignored) {
+                }
             }
         }
         logger.error("[LINT] Result publish FAILED after 3 retries for Snippet({})", snippetId);

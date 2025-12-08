@@ -60,7 +60,7 @@ public class AssetService {
 
     public ResponseEntity<String> saveSnippet(UUID snippetId, String content) {
         try {
-            String url = buildUrl(snippetId);
+            String url = buildUrl(snippetId) + "/formatted";
             logger.info("Url : {}", url);
             byte[] bodyBytes = content.getBytes(StandardCharsets.UTF_8);
             HttpHeaders headers = new HttpHeaders();
@@ -68,7 +68,7 @@ public class AssetService {
             headers.setAll(getCorrelationHeader());
             logger.info(new String(bodyBytes, StandardCharsets.UTF_8));
             HttpEntity<byte[]> request = new HttpEntity<>(bodyBytes, headers);
-            restTemplate.put(url, request);
+            restTemplate.exchange(url, HttpMethod.PUT, request, Void.class);
             logger.info("Snippet saved at Url: {}", url);
             return ResponseEntity.ok("Snippet saved successfully.");
         } catch (HttpClientErrorException e) {

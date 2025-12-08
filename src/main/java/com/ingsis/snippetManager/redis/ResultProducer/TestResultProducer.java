@@ -18,19 +18,14 @@ public class TestResultProducer {
     private final String streamKey;
     private final RedisTemplate<String, String> redis;
 
-    public TestResultProducer(
-            @Value("${redis.streams.testRequest}") String streamKey,
-            RedisTemplate<String, String> redis
-    ) {
+    public TestResultProducer(@Value("${redis.streams.testRequest}") String streamKey,
+            RedisTemplate<String, String> redis) {
         this.streamKey = streamKey;
         this.redis = redis;
     }
 
     public void emit(String jsonMessage) {
-        ObjectRecord<String, String> record =
-                StreamRecords.newRecord()
-                        .ofObject(jsonMessage)
-                        .withStreamKey(streamKey);
+        ObjectRecord<String, String> record = StreamRecords.newRecord().ofObject(jsonMessage).withStreamKey(streamKey);
 
         redis.opsForStream().add(record);
     }

@@ -19,21 +19,15 @@ public class LintResultProducer {
     private final RedisTemplate<String, String> redis;
     private final ObjectMapper objectMapper;
 
-    public LintResultProducer(
-            @Value("${redis.streams.lintResult}") String streamKey,
-            RedisTemplate<String, String> redis,
-            ObjectMapper objectMapper
-    ) {
+    public LintResultProducer(@Value("${redis.streams.lintResult}") String streamKey,
+            RedisTemplate<String, String> redis, ObjectMapper objectMapper) {
         this.streamKey = streamKey;
         this.redis = redis;
         this.objectMapper = objectMapper;
     }
 
     public void emit(String jsonMessage) {
-        ObjectRecord<String, String> record =
-                StreamRecords.newRecord()
-                        .ofObject(jsonMessage)
-                        .withStreamKey(streamKey);
+        ObjectRecord<String, String> record = StreamRecords.newRecord().ofObject(jsonMessage).withStreamKey(streamKey);
 
         redis.opsForStream().add(record);
     }
