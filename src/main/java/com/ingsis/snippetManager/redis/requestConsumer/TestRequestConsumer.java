@@ -1,10 +1,10 @@
-package com.ingsis.snippetManager.redis.RequestConsumer;
+package com.ingsis.snippetManager.redis.requestConsumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingsis.snippetManager.engine.SnippetRunnerService;
 import com.ingsis.snippetManager.engine.dto.request.TestRequestDTO;
 import com.ingsis.snippetManager.engine.dto.response.RunSnippetResponseDTO;
-import com.ingsis.snippetManager.redis.ResultProducer.TestResultProducer;
+import com.ingsis.snippetManager.redis.resultProducer.TestResultProducer;
 import com.ingsis.snippetManager.redis.dto.testing.SnippetTestStatus;
 import com.ingsis.snippetManager.redis.dto.testing.TestRequestEvent;
 import com.ingsis.snippetManager.redis.dto.testing.TestResultEvent;

@@ -41,13 +41,14 @@ public class RunController {
 
     @PostMapping("/analyze")
     public ValidationResult analyze(@AuthenticationPrincipal Jwt jwt, @RequestBody LintRequestDTO dto) {
-        Result<String> message = service.analyze(dto.snippetId(), Version.fromString(dto.version()), dto.rules(), dto.language());
-        return new ValidationResult(message.result(),message.isCorrect());
+        Result<String> message = service.analyze(dto.snippetId(), Version.fromString(dto.version()), dto.rules(),
+                dto.language());
+        return new ValidationResult(message.result(), message.isCorrect());
     }
     @PostMapping("/validate")
-    public Boolean validate(@AuthenticationPrincipal Jwt jwt, @RequestBody LintRequestDTO dto) {
-        return service.analyze(dto.snippetId(), Version.fromString(dto.version()), dto.rules(), dto.language())
-                .isCorrect();
+    public ValidationResult validate(@AuthenticationPrincipal Jwt jwt, @RequestBody LintRequestDTO dto) {
+        Result<List<String>> result = service.validate(dto.snippetId(),dto.language(),Version.fromString(dto.version()));
+        return new ValidationResult(result.error(), result.isCorrect());
     }
     @PostMapping("/test")
     public TestResponseDTO test(@AuthenticationPrincipal Jwt jwt, @RequestBody TestRequestDTO dto) {

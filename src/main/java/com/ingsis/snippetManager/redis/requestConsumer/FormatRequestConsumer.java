@@ -1,9 +1,9 @@
-package com.ingsis.snippetManager.redis.RequestConsumer;
+package com.ingsis.snippetManager.redis.requestConsumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingsis.engine.versions.Version;
 import com.ingsis.snippetManager.engine.SnippetRunnerService;
-import com.ingsis.snippetManager.redis.ResultProducer.FormatResultProducer;
+import com.ingsis.snippetManager.redis.resultProducer.FormatResultProducer;
 import com.ingsis.snippetManager.redis.dto.format.FormatRequestEvent;
 import com.ingsis.snippetManager.redis.dto.format.FormatResultEvent;
 import com.ingsis.snippetManager.redis.dto.format.FormatStatus;

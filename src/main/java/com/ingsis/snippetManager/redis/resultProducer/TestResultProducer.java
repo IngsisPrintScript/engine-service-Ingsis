@@ -1,4 +1,4 @@
-package com.ingsis.snippetManager.redis.ResultProducer;
+package com.ingsis.snippetManager.redis.resultProducer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingsis.snippetManager.redis.dto.testing.TestResultEvent;
