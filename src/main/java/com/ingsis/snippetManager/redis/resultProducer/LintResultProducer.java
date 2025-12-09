@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingsis.snippetManager.redis.dto.lint.LintResultEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.connection.stream.StreamRecords;
@@ -20,7 +21,7 @@ public class LintResultProducer {
     private final ObjectMapper objectMapper;
 
     public LintResultProducer(@Value("${redis.streams.lintResult}") String streamKey,
-            RedisTemplate<String, String> redis, ObjectMapper objectMapper) {
+                              @Qualifier("redisTemplate") RedisTemplate<String, String> redis, ObjectMapper objectMapper) {
         this.streamKey = streamKey;
         this.redis = redis;
         this.objectMapper = objectMapper;
@@ -28,7 +29,6 @@ public class LintResultProducer {
 
     public void emit(String jsonMessage) {
         ObjectRecord<String, String> record = StreamRecords.newRecord().ofObject(jsonMessage).withStreamKey(streamKey);
-
         redis.opsForStream().add(record);
     }
 

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingsis.snippetManager.redis.dto.format.FormatResultEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.connection.stream.StreamRecords;
@@ -20,7 +21,7 @@ public class FormatResultProducer {
     private final ObjectMapper objectMapper;
 
     public FormatResultProducer(@Value("${redis.streams.formatResult}") String streamKey,
-            RedisTemplate<String, String> redis, ObjectMapper objectMapper) {
+                                @Qualifier("redisTemplate") RedisTemplate<String, String> redis, ObjectMapper objectMapper) {
         this.streamKey = streamKey;
         this.redis = redis;
         this.objectMapper = objectMapper;

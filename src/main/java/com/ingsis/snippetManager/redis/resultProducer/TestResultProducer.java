@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingsis.snippetManager.redis.dto.testing.TestResultEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.connection.stream.StreamRecords;
@@ -19,7 +20,7 @@ public class TestResultProducer {
     private final RedisTemplate<String, String> redis;
 
     public TestResultProducer(@Value("${redis.streams.testRequest}") String streamKey,
-            RedisTemplate<String, String> redis) {
+                              @Qualifier("redisTemplate") RedisTemplate<String, String> redis) {
         this.streamKey = streamKey;
         this.redis = redis;
     }
