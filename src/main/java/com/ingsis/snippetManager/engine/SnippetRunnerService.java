@@ -127,10 +127,9 @@ public class SnippetRunnerService {
     }
 
     public Result<List<String>> validate(UUID snippetId, SupportedLanguage language, Version version) {
-        Engine engine = languageEngineFactory.getEngine(language);
         try {
-            RunSnippetResponseDTO exec = execute(language,snippetId,version);
-            if(exec.errors().isEmpty()) {
+            RunSnippetResponseDTO exec = execute(language, snippetId, version);
+            if (exec.errors().isEmpty()) {
                 return new CorrectResult<>(List.of());
             }
             return new IncorrectResult<>("Invalid snippet:\n" + String.join("\n", exec.errors()));

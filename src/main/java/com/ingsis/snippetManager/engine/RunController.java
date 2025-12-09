@@ -4,6 +4,7 @@ import com.ingsis.engine.versions.Version;
 import com.ingsis.snippetManager.engine.dto.request.FormatRequestDTO;
 import com.ingsis.snippetManager.engine.dto.request.LintRequestDTO;
 import com.ingsis.snippetManager.engine.dto.request.RunSnippetRequestDTO;
+import com.ingsis.snippetManager.engine.dto.request.SimpleRunSnippet;
 import com.ingsis.snippetManager.engine.dto.request.TestRequestDTO;
 import com.ingsis.snippetManager.engine.dto.response.RunSnippetResponseDTO;
 import com.ingsis.snippetManager.engine.dto.response.TestResponseDTO;
@@ -46,8 +47,9 @@ public class RunController {
         return new ValidationResult(message.result(), message.isCorrect());
     }
     @PostMapping("/validate")
-    public ValidationResult validate(@AuthenticationPrincipal Jwt jwt, @RequestBody LintRequestDTO dto) {
-        Result<List<String>> result = service.validate(dto.snippetId(),dto.language(),Version.fromString(dto.version()));
+    public ValidationResult validate(@AuthenticationPrincipal Jwt jwt, @RequestBody SimpleRunSnippet dto) {
+        Result<List<String>> result = service.validate(dto.snippetId(), dto.language(),
+                Version.fromString(dto.version()));
         return new ValidationResult(result.error(), result.isCorrect());
     }
     @PostMapping("/test")
