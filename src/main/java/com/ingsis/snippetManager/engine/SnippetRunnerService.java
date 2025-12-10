@@ -13,191 +13,148 @@ import com.ingsis.utils.result.CorrectResult;
 import com.ingsis.utils.result.IncorrectResult;
 import com.ingsis.utils.result.Result;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.PrintStream;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Logger;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
 public class SnippetRunnerService {
-    private final Logger logger = Logger.getLogger(SnippetRunnerService.class.getName());
+
     private final AssetService assetService;
     private final LanguageEngineFactory languageEngineFactory;
 
-    public SnippetRunnerService(AssetService assetService, LanguageEngineFactory languageEngineFactory) {
+    public SnippetRunnerService(
+            AssetService assetService,
+            LanguageEngineFactory languageEngineFactory
+    ) {
         this.assetService = assetService;
         this.languageEngineFactory = languageEngineFactory;
     }
 
-    public RunSnippetResponseDTO execute(SupportedLanguage language, UUID snippetId, Version version) {
-        Engine engine = languageEngineFactory.getEngine(language);
-
-        ResponseEntity<String> response = assetService.getSnippet(snippetId);
-
-        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+    public RunSnippetResponseDTO execute(
+            SupportedLanguage language,
+            UUID snippetId,
+            Version version
+    ) {
+        InputStream src = loadSnippet(snippetId);
+        if (src == null) {
             return new RunSnippetResponseDTO(List.of(), List.of("Snippet not found"));
         }
 
-        InputStream input = new ByteArrayInputStream(response.getBody().getBytes());
-
-        OutputCollector collector = new OutputCollector();
-
-        PrintStream originalOut = System.out;
-        PrintStream originalErr = System.err;
-
-        System.setOut(collector.out());
-        System.setErr(collector.err());
-
-        try {
-            Result<String> result = engine.interpret(input, version);
-
-            if (!result.isCorrect()) {
-                collector.getErrors().add(result.error());
-            }
-
-        } finally {
-            System.setOut(originalOut);
-            System.setErr(originalErr);
-        }
-
-        return new RunSnippetResponseDTO(collector.getOutputs(), collector.getErrors());
+        EngineAdapter adapter = createAdapter(language);
+        return adapter.execute(src, version);
     }
 
-    public Result<String> format(UUID snippetId, Version version, FormatterSupportedRules rules,
-            SupportedLanguage language) {
-        Engine engine = languageEngineFactory.getEngine(language);
-        ResponseEntity<String> response = assetService.getSnippet(snippetId);
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            return new IncorrectResult<>("Failed to find snippet");
+    public Result<String> format(
+            UUID snippetId,
+            Version version,
+            FormatterSupportedRules rules,
+            SupportedLanguage language
+    ) {
+        InputStream src = loadSnippet(snippetId);
+        if (src == null) {
+            return new IncorrectResult<>("Snippet not found");
         }
 
-        if (response.getBody() == null) {
-            return new CorrectResult<>("Formatted");
+        EngineAdapter adapter = createAdapter(language);
+        InputStream rulesStream = rulesToInputStream(rules);
+
+        Result<String> formattedResult = adapter.format(src, rulesStream, version);
+        if (!formattedResult.isCorrect()) {
+            return formattedResult;
         }
 
-        InputStream input = new ByteArrayInputStream(response.getBody().getBytes());
-        InputStream inputRules = rulesToInputStream(rules);
-
-        StringWriter writer = new StringWriter();
-
-        Result<String> result = engine.format(input, inputRules, writer, version);
-
-        if (!result.isCorrect()) {
-            return result;
-        }
-        String newContent = writer.toString();
-        return new CorrectResult<>(assetService.saveSnippet(snippetId, newContent).getBody());
+        return saveSnippet(snippetId, formattedResult.result());
     }
 
-    public Result<String> analyze(UUID snippetId, Version version, LintSupportedRules rules,
-            SupportedLanguage language) {
-        Engine engine = languageEngineFactory.getEngine(language);
-
-        ResponseEntity<String> response = assetService.getSnippet(snippetId);
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            return new IncorrectResult<>(response.getBody());
+    public Result<String> analyze(
+            UUID snippetId,
+            Version version,
+            LintSupportedRules rules,
+            SupportedLanguage language
+    ) {
+        InputStream src = loadSnippet(snippetId);
+        if (src == null) {
+            return new IncorrectResult<>("Snippet not found");
         }
 
-        if (response.getBody() == null) {
-            return new CorrectResult<>("No lint errors");
-        }
+        EngineAdapter adapter = createAdapter(language);
+        InputStream rulesStream = rulesToInputStream(rules);
 
-        InputStream input = new ByteArrayInputStream(response.getBody().getBytes());
-        InputStream inputRules = rulesToInputStream(rules);
-        ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
-        PrintStream originalErr = System.err;
-        System.setErr(new PrintStream(errorStream));
-        try {
-            Result<String> result = engine.analyze(input, inputRules, version);
-
-            if (!result.isCorrect()) {
-                return new IncorrectResult<>(result.error() + "\n" + errorStream.toString());
-            }
-            return new CorrectResult<>("No lint errors");
-
-        } finally {
-            System.setErr(originalErr);
-        }
+        return adapter.analyze(src, rulesStream, version);
     }
 
-    public Result<List<String>> validate(UUID snippetId, SupportedLanguage language, Version version) {
-        try {
-            RunSnippetResponseDTO exec = execute(language, snippetId, version);
-            if (exec.errors().isEmpty()) {
-                return new CorrectResult<>(List.of());
-            }
-            return new IncorrectResult<>("Invalid snippet:\n" + String.join("\n", exec.errors()));
-        } catch (Exception e) {
-            String errorMessage = e.getMessage();
-            return new IncorrectResult<>("Invalid snippet: " + errorMessage);
+    public Result<List<String>> validate(
+            UUID snippetId,
+            SupportedLanguage language,
+            Version version
+    ) {
+        RunSnippetResponseDTO exec = execute(language, snippetId, version);
+
+        if (exec.errors().isEmpty()) {
+            return new CorrectResult<>(List.of());
         }
+        return new IncorrectResult<>(
+                "Invalid snippet:\n" + String.join("\n", exec.errors())
+        );
     }
 
     public Result<RunSnippetResponseDTO> test(TestRequestDTO dto) {
+        String joinedInput = String.join("\n", dto.inputs());
+        InputStream inputStream =
+                new ByteArrayInputStream(joinedInput.getBytes(StandardCharsets.UTF_8));
 
-        Engine engine = languageEngineFactory.getEngine(dto.language());
+        EngineAdapter adapter = createAdapter(dto.language());
+        Version parsedVersion = Version.fromString(dto.version());
 
-        ResponseEntity<String> response = assetService.getSnippet(dto.snippetId());
-
-        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-            return new IncorrectResult<>("Snippet not found");
-        }
-        String fullInput = String.join("\n", dto.inputs());
-        InputStream input = new ByteArrayInputStream(fullInput.getBytes(StandardCharsets.UTF_8));
-        OutputCollector collector = new OutputCollector();
-        PrintStream originalOut = System.out;
-        PrintStream originalErr = System.err;
-        System.setOut(collector.out());
-        System.setErr(collector.err());
-        try {
-            Version parsedVersion = Version.fromString(dto.version());
-
-            Result<String> result = engine.interpret(input, parsedVersion);
-
-            if (!result.isCorrect()) {
-                return new IncorrectResult<>(result.error());
-            }
-
-        } catch (Exception e) {
-            return new IncorrectResult<>("Execution error: " + e.getMessage());
-        } finally {
-            System.setOut(originalOut);
-            System.setErr(originalErr);
+        RunSnippetResponseDTO exec = adapter.execute(inputStream, parsedVersion);
+        if (!exec.errors().isEmpty()) {
+            return new IncorrectResult<>("Execution error:\n" +
+                    String.join("\n", exec.errors()));
         }
 
-        List<String> realOutputs = collector.getOutputs();
-        List<String> expectedOutputs = dto.outputs();
-
-        if (!realOutputs.equals(expectedOutputs)) {
-            return new IncorrectResult<>("TEST FAILED \n" + "Expected outputs: " + expectedOutputs + "\n"
-                    + "Actual outputs:   " + realOutputs);
+        if (!exec.outputs().equals(dto.outputs())) {
+            return new IncorrectResult<>("TEST FAILED\n" +
+                    "Expected: " + dto.outputs() + "\n" +
+                    "Actual:   " + exec.outputs());
         }
-        return new CorrectResult<>(new RunSnippetResponseDTO(realOutputs, collector.getErrors()));
+
+        return new CorrectResult<>(exec);
     }
 
-    private InputStream rulesToInputStream(FormatterSupportedRules rules) {
+
+    private EngineAdapter createAdapter(SupportedLanguage language) {
+        Engine engine = languageEngineFactory.getEngine(language);
+        return new EngineAdapter(engine);
+    }
+
+    private InputStream loadSnippet(UUID id) {
+        ResponseEntity<String> response = assetService.getSnippet(id);
+        if (!response.getStatusCode().is2xxSuccessful()
+                || response.getBody() == null) {
+            return null;
+        }
+        return new ByteArrayInputStream(response.getBody().getBytes(StandardCharsets.UTF_8));
+    }
+
+    private Result<String> saveSnippet(UUID id, String newContent) {
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            String json = mapper.writeValueAsString(rules);
-            return new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
+            return new CorrectResult<>(assetService.saveSnippet(id, newContent).getBody());
         } catch (Exception e) {
-            throw new RuntimeException("Failed to convert formatter rules to InputStream", e);
+            return new IncorrectResult<>("Failed to save snippet");
         }
     }
 
-    private InputStream rulesToInputStream(LintSupportedRules rules) {
+    private InputStream rulesToInputStream(Object rulesObj) {
         try {
             ObjectMapper mapper = new ObjectMapper();
-            String json = mapper.writeValueAsString(rules);
+            String json = mapper.writeValueAsString(rulesObj);
             return new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
-            throw new RuntimeException("Failed to convert formatter rules to InputStream", e);
+            throw new RuntimeException("Failed to convert rules JSON", e);
         }
     }
 }

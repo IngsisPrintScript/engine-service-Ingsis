@@ -20,7 +20,6 @@ public class TestResultProducer {
     private final RedisTemplate<String, String> redis;
     private final ObjectMapper objectMapper;
 
-
     public TestResultProducer(@Value("${redis.streams.testResult}") String streamKey,
             @Qualifier("redisTemplate") RedisTemplate<String, String> redis, ObjectMapper objectMapper) {
         this.streamKey = streamKey;
