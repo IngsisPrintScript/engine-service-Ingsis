@@ -26,19 +26,12 @@ public class SnippetRunnerService {
     private final AssetService assetService;
     private final LanguageEngineFactory languageEngineFactory;
 
-    public SnippetRunnerService(
-            AssetService assetService,
-            LanguageEngineFactory languageEngineFactory
-    ) {
+    public SnippetRunnerService(AssetService assetService, LanguageEngineFactory languageEngineFactory) {
         this.assetService = assetService;
         this.languageEngineFactory = languageEngineFactory;
     }
 
-    public RunSnippetResponseDTO execute(
-            SupportedLanguage language,
-            UUID snippetId,
-            Version version
-    ) {
+    public RunSnippetResponseDTO execute(SupportedLanguage language, UUID snippetId, Version version) {
         InputStream src = loadSnippet(snippetId);
         if (src == null) {
             return new RunSnippetResponseDTO(List.of(), List.of("Snippet not found"));
@@ -48,12 +41,8 @@ public class SnippetRunnerService {
         return adapter.execute(src, version);
     }
 
-    public Result<String> format(
-            UUID snippetId,
-            Version version,
-            FormatterSupportedRules rules,
-            SupportedLanguage language
-    ) {
+    public Result<String> format(UUID snippetId, Version version, FormatterSupportedRules rules,
+            SupportedLanguage language) {
         InputStream src = loadSnippet(snippetId);
         if (src == null) {
             return new IncorrectResult<>("Snippet not found");
@@ -70,12 +59,8 @@ public class SnippetRunnerService {
         return saveSnippet(snippetId, formattedResult.result());
     }
 
-    public Result<String> analyze(
-            UUID snippetId,
-            Version version,
-            LintSupportedRules rules,
-            SupportedLanguage language
-    ) {
+    public Result<String> analyze(UUID snippetId, Version version, LintSupportedRules rules,
+            SupportedLanguage language) {
         InputStream src = loadSnippet(snippetId);
         if (src == null) {
             return new IncorrectResult<>("Snippet not found");
@@ -87,44 +72,34 @@ public class SnippetRunnerService {
         return adapter.analyze(src, rulesStream, version);
     }
 
-    public Result<List<String>> validate(
-            UUID snippetId,
-            SupportedLanguage language,
-            Version version
-    ) {
+    public Result<List<String>> validate(UUID snippetId, SupportedLanguage language, Version version) {
         RunSnippetResponseDTO exec = execute(language, snippetId, version);
 
         if (exec.errors().isEmpty()) {
             return new CorrectResult<>(List.of());
         }
-        return new IncorrectResult<>(
-                "Invalid snippet:\n" + String.join("\n", exec.errors())
-        );
+        return new IncorrectResult<>("Invalid snippet:\n" + String.join("\n", exec.errors()));
     }
 
     public Result<RunSnippetResponseDTO> test(TestRequestDTO dto) {
         String joinedInput = String.join("\n", dto.inputs());
-        InputStream inputStream =
-                new ByteArrayInputStream(joinedInput.getBytes(StandardCharsets.UTF_8));
+        InputStream inputStream = new ByteArrayInputStream(joinedInput.getBytes(StandardCharsets.UTF_8));
 
         EngineAdapter adapter = createAdapter(dto.language());
         Version parsedVersion = Version.fromString(dto.version());
 
         RunSnippetResponseDTO exec = adapter.execute(inputStream, parsedVersion);
         if (!exec.errors().isEmpty()) {
-            return new IncorrectResult<>("Execution error:\n" +
-                    String.join("\n", exec.errors()));
+            return new IncorrectResult<>("Execution error:\n" + String.join("\n", exec.errors()));
         }
 
         if (!exec.outputs().equals(dto.outputs())) {
-            return new IncorrectResult<>("TEST FAILED\n" +
-                    "Expected: " + dto.outputs() + "\n" +
-                    "Actual:   " + exec.outputs());
+            return new IncorrectResult<>(
+                    "TEST FAILED\n" + "Expected: " + dto.outputs() + "\n" + "Actual:   " + exec.outputs());
         }
 
         return new CorrectResult<>(exec);
     }
-
 
     private EngineAdapter createAdapter(SupportedLanguage language) {
         Engine engine = languageEngineFactory.getEngine(language);
@@ -133,8 +108,7 @@ public class SnippetRunnerService {
 
     private InputStream loadSnippet(UUID id) {
         ResponseEntity<String> response = assetService.getSnippet(id);
-        if (!response.getStatusCode().is2xxSuccessful()
-                || response.getBody() == null) {
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
             return null;
         }
         return new ByteArrayInputStream(response.getBody().getBytes(StandardCharsets.UTF_8));
