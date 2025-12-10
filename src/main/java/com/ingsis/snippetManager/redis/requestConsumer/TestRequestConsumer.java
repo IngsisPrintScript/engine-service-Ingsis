@@ -38,8 +38,8 @@ public class TestRequestConsumer extends RedisStreamConsumer<String> {
     private final ExecutorService executor = Executors.newFixedThreadPool(10);
     private final RedisTemplate<String, String> redisTemplate;
 
-    public TestRequestConsumer(@Value("${redis.streams.runRequest}") String streamName,
-            @Value("${redis.groups.run}") String groupName, RedisTemplate<String, String> redisTemplate,
+    public TestRequestConsumer(@Value("${redis.streams.testRequest}") String streamName,
+            @Value("${redis.groups.test}") String groupName, RedisTemplate<String, String> redisTemplate,
             SnippetRunnerService service, TestResultProducer runResultProducer, ObjectMapper objectMapper,
             SnippetStatusService snippetStatusService) {
         super(streamName, groupName, redisTemplate);

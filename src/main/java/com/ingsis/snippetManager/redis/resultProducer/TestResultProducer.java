@@ -18,22 +18,24 @@ public class TestResultProducer {
 
     private final String streamKey;
     private final RedisTemplate<String, String> redis;
+    private final ObjectMapper objectMapper;
 
-    public TestResultProducer(@Value("${redis.streams.testRequest}") String streamKey,
-                              @Qualifier("redisTemplate") RedisTemplate<String, String> redis) {
+
+    public TestResultProducer(@Value("${redis.streams.testResult}") String streamKey,
+            @Qualifier("redisTemplate") RedisTemplate<String, String> redis, ObjectMapper objectMapper) {
         this.streamKey = streamKey;
         this.redis = redis;
+        this.objectMapper = objectMapper;
     }
 
     public void emit(String jsonMessage) {
         ObjectRecord<String, String> record = StreamRecords.newRecord().ofObject(jsonMessage).withStreamKey(streamKey);
-
         redis.opsForStream().add(record);
     }
 
     public void publish(TestResultEvent event) {
         try {
-            String json = new ObjectMapper().writeValueAsString(event);
+            String json = objectMapper.writeValueAsString(event);
 
             logger.info("Publishing TestResultEvent for Snippet({})", event.snippetId());
 

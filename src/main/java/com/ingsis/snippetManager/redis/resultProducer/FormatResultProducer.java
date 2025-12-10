@@ -21,7 +21,7 @@ public class FormatResultProducer {
     private final ObjectMapper objectMapper;
 
     public FormatResultProducer(@Value("${redis.streams.formatResult}") String streamKey,
-                                @Qualifier("redisTemplate") RedisTemplate<String, String> redis, ObjectMapper objectMapper) {
+            @Qualifier("redisTemplate") RedisTemplate<String, String> redis, ObjectMapper objectMapper) {
         this.streamKey = streamKey;
         this.redis = redis;
         this.objectMapper = objectMapper;
