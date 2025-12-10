@@ -4,7 +4,14 @@ import com.ingsis.engine.versions.Version;
 import com.ingsis.snippetManager.engine.dto.request.FormatRequestDTO;
 import com.ingsis.snippetManager.engine.dto.request.LintRequestDTO;
 import com.ingsis.snippetManager.engine.dto.request.RunSnippetRequestDTO;
+import com.ingsis.snippetManager.engine.dto.request.SimpleRunSnippet;
+import com.ingsis.snippetManager.engine.dto.request.TestRequestDTO;
 import com.ingsis.snippetManager.engine.dto.response.RunSnippetResponseDTO;
+import com.ingsis.snippetManager.engine.dto.response.TestResponseDTO;
+import com.ingsis.snippetManager.engine.dto.response.ValidationResult;
+import com.ingsis.snippetManager.redis.dto.testing.SnippetTestStatus;
+import com.ingsis.utils.result.Result;
+import java.util.List;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,11 +37,35 @@ public class RunController {
     @PostMapping("/format")
     public String format(@AuthenticationPrincipal Jwt jwt, @RequestBody FormatRequestDTO dto) {
         return service.format(dto.snippetId(), Version.fromString(dto.version()), dto.formatterSupportedRules(),
-                dto.language());
+                dto.language()).result();
     }
 
     @PostMapping("/analyze")
-    public String analyze(@AuthenticationPrincipal Jwt jwt, @RequestBody LintRequestDTO dto) {
-        return service.analyze(dto.snippetId(), Version.fromString(dto.version()), dto.rules(), dto.language());
+    public ValidationResult analyze(@AuthenticationPrincipal Jwt jwt, @RequestBody LintRequestDTO dto) {
+        Result<String> message = service.analyze(dto.snippetId(), Version.fromString(dto.version()), dto.rules(),
+                dto.language());
+        return new ValidationResult(message.result(), message.isCorrect());
+    }
+    @PostMapping("/validate")
+    public ValidationResult validate(@AuthenticationPrincipal Jwt jwt, @RequestBody SimpleRunSnippet dto) {
+        Result<List<String>> result = service.validate(dto.snippetId(), dto.language(),
+                Version.fromString(dto.version()));
+        return new ValidationResult(result.error(), result.isCorrect());
+    }
+    @PostMapping("/test")
+    public TestResponseDTO test(@AuthenticationPrincipal Jwt jwt, @RequestBody TestRequestDTO dto) {
+        Result<RunSnippetResponseDTO> tested = service.test(dto);
+
+        RunSnippetResponseDTO response;
+
+        if (tested.isCorrect()) {
+            response = tested.result();
+        } else {
+            response = tested.result() != null
+                    ? tested.result()
+                    : new RunSnippetResponseDTO(List.of(), List.of("Test execution failed"));
+        }
+        return new TestResponseDTO(response.outputs(), response.errors(),
+                tested.isCorrect() ? SnippetTestStatus.PASSED : SnippetTestStatus.FAILED);
     }
 }

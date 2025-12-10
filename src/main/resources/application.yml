@@ -8,7 +8,7 @@ spring:
           issuer-uri: ${AUTH0_ISSUER_URI}
   data:
     redis:
-      host: ${REDIS_HOST:redis}
+      host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
     
 server:

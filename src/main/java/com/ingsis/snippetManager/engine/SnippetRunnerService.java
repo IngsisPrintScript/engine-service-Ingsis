@@ -3,11 +3,14 @@ package com.ingsis.snippetManager.engine;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingsis.engine.Engine;
 import com.ingsis.engine.versions.Version;
+import com.ingsis.snippetManager.engine.dto.request.TestRequestDTO;
 import com.ingsis.snippetManager.engine.dto.response.RunSnippetResponseDTO;
 import com.ingsis.snippetManager.engine.supportedLanguage.SupportedLanguage;
 import com.ingsis.snippetManager.engine.supportedRules.FormatterSupportedRules;
 import com.ingsis.snippetManager.engine.supportedRules.LintSupportedRules;
 import com.ingsis.snippetManager.intermediate.azureStorageConfig.AssetService;
+import com.ingsis.utils.result.CorrectResult;
+import com.ingsis.utils.result.IncorrectResult;
 import com.ingsis.utils.result.Result;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -66,15 +69,16 @@ public class SnippetRunnerService {
         return new RunSnippetResponseDTO(collector.getOutputs(), collector.getErrors());
     }
 
-    public String format(UUID snippetId, Version version, FormatterSupportedRules rules, SupportedLanguage language) {
+    public Result<String> format(UUID snippetId, Version version, FormatterSupportedRules rules,
+            SupportedLanguage language) {
         Engine engine = languageEngineFactory.getEngine(language);
         ResponseEntity<String> response = assetService.getSnippet(snippetId);
         if (!response.getStatusCode().is2xxSuccessful()) {
-            return "Failed to find snippet";
+            return new IncorrectResult<>("Failed to find snippet");
         }
 
         if (response.getBody() == null) {
-            return "Formatted";
+            return new CorrectResult<>("Formatted");
         }
 
         InputStream input = new ByteArrayInputStream(response.getBody().getBytes());
@@ -85,22 +89,23 @@ public class SnippetRunnerService {
         Result<String> result = engine.format(input, inputRules, writer, version);
 
         if (!result.isCorrect()) {
-            return result.error();
+            return result;
         }
         String newContent = writer.toString();
-        return assetService.saveSnippet(snippetId, newContent).getBody();
+        return new CorrectResult<>(assetService.saveSnippet(snippetId, newContent).getBody());
     }
 
-    public String analyze(UUID snippetId, Version version, LintSupportedRules rules, SupportedLanguage language) {
+    public Result<String> analyze(UUID snippetId, Version version, LintSupportedRules rules,
+            SupportedLanguage language) {
         Engine engine = languageEngineFactory.getEngine(language);
 
         ResponseEntity<String> response = assetService.getSnippet(snippetId);
         if (!response.getStatusCode().is2xxSuccessful()) {
-            return response.getBody();
+            return new IncorrectResult<>(response.getBody());
         }
 
         if (response.getBody() == null) {
-            return "No lint errors";
+            return new CorrectResult<>("No lint errors");
         }
 
         InputStream input = new ByteArrayInputStream(response.getBody().getBytes());
@@ -112,13 +117,68 @@ public class SnippetRunnerService {
             Result<String> result = engine.analyze(input, inputRules, version);
 
             if (!result.isCorrect()) {
-                return result.error() + "\n" + errorStream.toString();
+                return new IncorrectResult<>(result.error() + "\n" + errorStream.toString());
             }
-            return "No lint errors";
+            return new CorrectResult<>("No lint errors");
 
         } finally {
             System.setErr(originalErr);
         }
+    }
+
+    public Result<List<String>> validate(UUID snippetId, SupportedLanguage language, Version version) {
+        try {
+            RunSnippetResponseDTO exec = execute(language, snippetId, version);
+            if (exec.errors().isEmpty()) {
+                return new CorrectResult<>(List.of());
+            }
+            return new IncorrectResult<>("Invalid snippet:\n" + String.join("\n", exec.errors()));
+        } catch (Exception e) {
+            String errorMessage = e.getMessage();
+            return new IncorrectResult<>("Invalid snippet: " + errorMessage);
+        }
+    }
+
+    public Result<RunSnippetResponseDTO> test(TestRequestDTO dto) {
+
+        Engine engine = languageEngineFactory.getEngine(dto.language());
+
+        ResponseEntity<String> response = assetService.getSnippet(dto.snippetId());
+
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            return new IncorrectResult<>("Snippet not found");
+        }
+        String fullInput = String.join("\n", dto.inputs());
+        InputStream input = new ByteArrayInputStream(fullInput.getBytes(StandardCharsets.UTF_8));
+        OutputCollector collector = new OutputCollector();
+        PrintStream originalOut = System.out;
+        PrintStream originalErr = System.err;
+        System.setOut(collector.out());
+        System.setErr(collector.err());
+        try {
+            Version parsedVersion = Version.fromString(dto.version());
+
+            Result<String> result = engine.interpret(input, parsedVersion);
+
+            if (!result.isCorrect()) {
+                return new IncorrectResult<>(result.error());
+            }
+
+        } catch (Exception e) {
+            return new IncorrectResult<>("Execution error: " + e.getMessage());
+        } finally {
+            System.setOut(originalOut);
+            System.setErr(originalErr);
+        }
+
+        List<String> realOutputs = collector.getOutputs();
+        List<String> expectedOutputs = dto.outputs();
+
+        if (!realOutputs.equals(expectedOutputs)) {
+            return new IncorrectResult<>("TEST FAILED \n" + "Expected outputs: " + expectedOutputs + "\n"
+                    + "Actual outputs:   " + realOutputs);
+        }
+        return new CorrectResult<>(new RunSnippetResponseDTO(realOutputs, collector.getErrors()));
     }
 
     private InputStream rulesToInputStream(FormatterSupportedRules rules) {
