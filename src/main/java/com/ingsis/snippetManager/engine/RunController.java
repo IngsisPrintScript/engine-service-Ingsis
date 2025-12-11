@@ -48,16 +48,11 @@ public class RunController {
         return new ValidationResult(message.result(), message.isCorrect());
     }
     @PostMapping("/validate")
-    public ValidationResult validate(
-            @AuthenticationPrincipal Jwt jwt,
-            @RequestBody SimpleRunSnippet dto
-    ) {
-        Result<List<String>> result =
-                service.validate(dto.snippetId(), dto.language(), Version.fromString(dto.version()));
+    public ValidationResult validate(@AuthenticationPrincipal Jwt jwt, @RequestBody SimpleRunSnippet dto) {
+        Result<List<String>> result = service.validate(dto.snippetId(), dto.language(),
+                Version.fromString(dto.version()));
 
-        String error = result instanceof IncorrectResult<?>(String error1)
-                ? error1
-                : null;
+        String error = result instanceof IncorrectResult<?>(String error1) ? error1 : null;
 
         return new ValidationResult(error, result.isCorrect());
     }
