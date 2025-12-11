@@ -17,6 +17,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +28,7 @@ public class SnippetRunnerService {
 
     private final AssetService assetService;
     private final LanguageEngineFactory languageEngineFactory;
+    private static final Logger logger = LoggerFactory.getLogger(SnippetRunnerService.class);
 
     public SnippetRunnerService(
             AssetService assetService,
@@ -43,7 +47,6 @@ public class SnippetRunnerService {
         if (src == null) {
             return new RunSnippetResponseDTO(List.of(), List.of("Snippet not found"));
         }
-
         EngineAdapter adapter = createAdapter(language);
         return adapter.execute(src, version);
     }
@@ -93,10 +96,11 @@ public class SnippetRunnerService {
             Version version
     ) {
         RunSnippetResponseDTO exec = execute(language, snippetId, version);
-
         if (exec.errors().isEmpty()) {
+            logger.info("Snippet validated successfully");
             return new CorrectResult<>(List.of());
         }
+        logger.info("Snippet failed successfully");
         return new IncorrectResult<>(
                 "Invalid snippet:\n" + String.join("\n", exec.errors())
         );

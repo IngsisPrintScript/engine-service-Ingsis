@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 public class LanguageEngineFactory {
 
     public Engine getEngine(SupportedLanguage language) {
-        return switch (language.name()) {
+        return switch (language.name().toLowerCase()) {
             case "printscript" -> new InMemoryEngine();
             default -> throw new IllegalArgumentException("Language not supported: " + language);
         };

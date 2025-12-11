@@ -10,6 +10,7 @@ import com.ingsis.snippetManager.engine.dto.response.RunSnippetResponseDTO;
 import com.ingsis.snippetManager.engine.dto.response.TestResponseDTO;
 import com.ingsis.snippetManager.engine.dto.response.ValidationResult;
 import com.ingsis.snippetManager.redis.dto.testing.SnippetTestStatus;
+import com.ingsis.utils.result.IncorrectResult;
 import com.ingsis.utils.result.Result;
 import java.util.List;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -47,10 +48,18 @@ public class RunController {
         return new ValidationResult(message.result(), message.isCorrect());
     }
     @PostMapping("/validate")
-    public ValidationResult validate(@AuthenticationPrincipal Jwt jwt, @RequestBody SimpleRunSnippet dto) {
-        Result<List<String>> result = service.validate(dto.snippetId(), dto.language(),
-                Version.fromString(dto.version()));
-        return new ValidationResult(result.error(), result.isCorrect());
+    public ValidationResult validate(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody SimpleRunSnippet dto
+    ) {
+        Result<List<String>> result =
+                service.validate(dto.snippetId(), dto.language(), Version.fromString(dto.version()));
+
+        String error = result instanceof IncorrectResult<?>(String error1)
+                ? error1
+                : null;
+
+        return new ValidationResult(error, result.isCorrect());
     }
     @PostMapping("/test")
     public TestResponseDTO test(@AuthenticationPrincipal Jwt jwt, @RequestBody TestRequestDTO dto) {

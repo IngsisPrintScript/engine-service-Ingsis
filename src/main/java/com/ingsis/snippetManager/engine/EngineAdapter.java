@@ -33,9 +33,11 @@ public class EngineAdapter implements EngineAdapterInterface {
         DefaultRuntime.getInstance().push();
         try {
             Result<String> result = engine.interpret(src, version);
-            if (!result.isCorrect()) {
-                collector.getErrors().add(result.error());
+            if (result instanceof IncorrectResult<?>(String error)) {
+                collector.getErrors().add(error);
             }
+        } catch (Exception e) {
+            collector.getErrors().add(e.getMessage());
         } finally {
             DefaultRuntime.getInstance().pop();
             System.setOut(originalOut);
