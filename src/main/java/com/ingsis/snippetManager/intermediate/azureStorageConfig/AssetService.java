@@ -40,8 +40,6 @@ public class AssetService {
     public ResponseEntity<String> getSnippet(UUID snippetId) {
         try {
             String url = buildUrl(snippetId);
-            logger.info("Getting snippet from Url: {}", url);
-
             HttpHeaders headers = new HttpHeaders();
             headers.setAll(getCorrelationHeader());
 

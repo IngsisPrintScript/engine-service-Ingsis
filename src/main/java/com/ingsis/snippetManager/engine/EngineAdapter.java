@@ -3,16 +3,26 @@ package com.ingsis.snippetManager.engine;
 import com.ingsis.engine.Engine;
 import com.ingsis.engine.versions.Version;
 import com.ingsis.snippetManager.engine.dto.response.RunSnippetResponseDTO;
+import com.ingsis.snippetManager.engine.runner.CollectingEmitter;
+import com.ingsis.snippetManager.engine.runner.NativeExpressionNode;
 import com.ingsis.utils.result.CorrectResult;
 import com.ingsis.utils.result.IncorrectResult;
 import com.ingsis.utils.result.Result;
 import com.ingsis.utils.runtime.DefaultRuntime;
+import com.ingsis.utils.runtime.environment.Environment;
+import com.ingsis.utils.type.types.Types;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class EngineAdapter implements EngineAdapterInterface {
+public class EngineAdapter {
 
     private final Engine engine;
 
@@ -20,32 +30,49 @@ public class EngineAdapter implements EngineAdapterInterface {
         this.engine = engine;
     }
 
-    @Override
-    public RunSnippetResponseDTO execute(InputStream src, Version version) {
-        OutputCollector collector = new OutputCollector();
-        var originalOut = System.out;
-        var originalErr = System.err;
+    public RunSnippetResponseDTO execute(String code, Version version, List<String> inputs, Map<String, String> envs) {
 
-        System.setOut(collector.out());
-        System.setErr(collector.err());
+        CollectingEmitter emitter = new CollectingEmitter();
+        DefaultRuntime runtime = DefaultRuntime.getInstance();
+        runtime.setEmitter(emitter);
 
-        DefaultRuntime.getInstance().push();
         try {
-            Result<String> result = engine.interpret(src, version);
-            if (result instanceof IncorrectResult<?>(String error)) {
-                collector.getErrors().add(error);
+            runtime.push();
+            Environment env = runtime.getCurrentEnvironment();
+
+            for (var e : envs.entrySet()) {
+                env.createVariable(e.getKey(), Types.STRING, e.getValue(), false);
             }
+
+            AtomicInteger index = new AtomicInteger(0);
+            env.createFunction("readInput", new LinkedHashMap<>(), Types.STRING);
+            env.updateFunction("readInput", List.of(new NativeExpressionNode(
+                    () -> index.get() < inputs.size() ? inputs.get(index.getAndIncrement()) : "")));
+
+            LinkedHashMap<String, Types> args = new LinkedHashMap<>();
+            args.put("key", Types.STRING);
+            env.createFunction("readEnv", args, Types.STRING);
+            env.updateFunction("readEnv", List.of(new NativeExpressionNode(() -> {
+                Object key = env.readVariable("key").result().value();
+                if (key == null)
+                    return "";
+                var v = env.readVariable(key.toString());
+                return v.isCorrect() ? v.result().value() : "";
+            })));
+
+            InputStream codeStream = new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8));
+
+            engine.interpret(codeStream, version);
+
+            return new RunSnippetResponseDTO(emitter.outputs(), List.of());
+
         } catch (Exception e) {
-            collector.getErrors().add(e.getMessage());
+            return new RunSnippetResponseDTO(emitter.outputs(), List.of(e.getMessage()));
         } finally {
-            DefaultRuntime.getInstance().pop();
-            System.setOut(originalOut);
-            System.setErr(originalErr);
+            runtime.pop();
         }
-        return new RunSnippetResponseDTO(collector.getOutputs(), collector.getErrors());
     }
 
-    @Override
     public Result<String> analyze(InputStream src, InputStream config, Version version) {
         ByteArrayOutputStream errStream = new ByteArrayOutputStream();
         PrintStream originalErr = System.err;
@@ -64,7 +91,6 @@ public class EngineAdapter implements EngineAdapterInterface {
         }
     }
 
-    @Override
     public Result<String> format(InputStream src, InputStream rules, Version version) {
         StringWriter writer = new StringWriter();
 

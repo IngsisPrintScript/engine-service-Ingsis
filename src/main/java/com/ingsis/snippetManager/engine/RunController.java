@@ -9,10 +9,10 @@ import com.ingsis.snippetManager.engine.dto.request.TestRequestDTO;
 import com.ingsis.snippetManager.engine.dto.response.RunSnippetResponseDTO;
 import com.ingsis.snippetManager.engine.dto.response.TestResponseDTO;
 import com.ingsis.snippetManager.engine.dto.response.ValidationResult;
-import com.ingsis.snippetManager.redis.dto.testing.SnippetTestStatus;
 import com.ingsis.utils.result.IncorrectResult;
 import com.ingsis.utils.result.Result;
 import java.util.List;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,7 +32,8 @@ public class RunController {
 
     @PostMapping("/execute")
     public RunSnippetResponseDTO execute(@AuthenticationPrincipal Jwt jwt, @RequestBody RunSnippetRequestDTO dto) {
-        return service.execute(dto.language(), dto.snippetId(), Version.fromString(dto.version()));
+        return service.execute(dto.language(), dto.snippetId(), Version.fromString(dto.version()), dto.inputs(),
+                dto.envs());
     }
 
     @PostMapping("/format")
@@ -57,19 +58,8 @@ public class RunController {
         return new ValidationResult(error, result.isCorrect());
     }
     @PostMapping("/test")
-    public TestResponseDTO test(@AuthenticationPrincipal Jwt jwt, @RequestBody TestRequestDTO dto) {
-        Result<RunSnippetResponseDTO> tested = service.test(dto);
-
-        RunSnippetResponseDTO response;
-
-        if (tested.isCorrect()) {
-            response = tested.result();
-        } else {
-            response = tested.result() != null
-                    ? tested.result()
-                    : new RunSnippetResponseDTO(List.of(), List.of("Test execution failed"));
-        }
-        return new TestResponseDTO(response.outputs(), response.errors(),
-                tested.isCorrect() ? SnippetTestStatus.PASSED : SnippetTestStatus.FAILED);
+    public ResponseEntity<TestResponseDTO> test(@AuthenticationPrincipal Jwt jwt, @RequestBody TestRequestDTO dto) {
+        TestResponseDTO response = service.test(dto);
+        return ResponseEntity.ok(response);
     }
 }

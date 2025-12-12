@@ -3,13 +3,12 @@ package com.ingsis.snippetManager.redis.requestConsumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingsis.snippetManager.engine.SnippetRunnerService;
 import com.ingsis.snippetManager.engine.dto.request.TestRequestDTO;
-import com.ingsis.snippetManager.engine.dto.response.RunSnippetResponseDTO;
+import com.ingsis.snippetManager.engine.dto.response.TestResponseDTO;
 import com.ingsis.snippetManager.redis.dto.testing.SnippetTestStatus;
 import com.ingsis.snippetManager.redis.dto.testing.TestRequestEvent;
 import com.ingsis.snippetManager.redis.dto.testing.TestResultEvent;
 import com.ingsis.snippetManager.redis.resultProducer.TestResultProducer;
 import com.ingsis.snippetManager.status.SnippetStatusService;
-import com.ingsis.utils.result.Result;
 import jakarta.annotation.PreDestroy;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -66,19 +65,17 @@ public class TestRequestConsumer extends RedisStreamConsumer<String> {
                 snippetStatusService.markTestPending(snippetId);
 
                 TestRequestDTO dto = new TestRequestDTO(snippetId, event.inputs(), event.expectedOutputs(),
-                        event.language(), event.version());
+                        event.language(), event.version(), event.envs());
 
-                Result<RunSnippetResponseDTO> result = service.test(dto);
-
-                boolean success = result.isCorrect();
-
-                if (success) {
+                TestResponseDTO result = service.test(dto);
+                boolean stat = result.status().equals(SnippetTestStatus.PASSED);
+                if (stat) {
                     snippetStatusService.markTested(snippetId);
                 } else {
                     snippetStatusService.markTestFailed(snippetId, "TEST_FAILED");
                 }
 
-                SnippetTestStatus finalStatus = success ? SnippetTestStatus.PASSED : SnippetTestStatus.FAILED;
+                SnippetTestStatus finalStatus = stat ? SnippetTestStatus.PASSED : SnippetTestStatus.FAILED;
 
                 redisTemplate.opsForStream().acknowledge(getStreamKey(), getGroupId(), record.getId());
 
