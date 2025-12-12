@@ -61,15 +61,13 @@ dependencies {
 }
 
 tasks.register("installGitHooks") {
+    onlyIf {
+        !System.getProperty("os.name").toLowerCase().contains("win")
+    }
+
     doLast {
-        if (System.getProperty("os.name").toLowerCase().contains("win")) {
-            exec {
-                commandLine "bash", "./scripts/install-hooks.sh"
-            }
-        } else {
-            exec {
-                commandLine "sh", "./scripts/install-hooks.sh"
-            }
+        exec {
+            commandLine "sh", "./scripts/install-hooks.sh"
         }
     }
 }
