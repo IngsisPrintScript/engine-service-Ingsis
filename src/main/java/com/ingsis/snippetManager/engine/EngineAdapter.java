@@ -55,6 +55,19 @@ public class EngineAdapter {
                                     : ""
                     )
             ));
+            env.createFunction("readNumber", new LinkedHashMap<>(), Types.NUMBER);
+            env.updateFunction("readNumber", List.of(
+                    new NativeExpressionNode(() -> {
+                        if (index.get() >= inputs.size()) {
+                            return 0.0;
+                        }
+                        try {
+                            return Double.parseDouble(inputs.get(index.getAndIncrement()));
+                        } catch (NumberFormatException e) {
+                            return 0.0;
+                        }
+                    })
+            ));
 
             /* readEnv(key) */
             LinkedHashMap<String, Types> args = new LinkedHashMap<>();
