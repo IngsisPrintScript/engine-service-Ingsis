@@ -45,20 +45,40 @@ public class EngineAdapter {
             }
 
             AtomicInteger index = new AtomicInteger(0);
-            env.createFunction("readInput", new LinkedHashMap<>(), Types.STRING);
-            env.updateFunction("readInput", List.of(new NativeExpressionNode(
-                    () -> index.get() < inputs.size() ? inputs.get(index.getAndIncrement()) : "")));
 
+            /* readInput() */
+            env.createFunction("readInput", new LinkedHashMap<>(), Types.STRING);
+            env.updateFunction("readInput", List.of(
+                    new NativeExpressionNode(() ->
+                            index.get() < inputs.size()
+                                    ? inputs.get(index.getAndIncrement())
+                                    : ""
+                    )
+            ));
+
+            /* readEnv(key) */
             LinkedHashMap<String, Types> args = new LinkedHashMap<>();
             args.put("key", Types.STRING);
+
             env.createFunction("readEnv", args, Types.STRING);
-            env.updateFunction("readEnv", List.of(new NativeExpressionNode(() -> {
-                Object key = env.readVariable("key").result().value();
-                if (key == null)
-                    return "";
-                var v = env.readVariable(key.toString());
-                return v.isCorrect() ? v.result().value() : "";
-            })));
+            env.updateFunction("readEnv", List.of(
+                    new NativeExpressionNode(() -> {
+                        var keyResult = env.readVariable("key");
+
+                        if (!keyResult.isCorrect() || keyResult.result().value() == null) {
+                            return "";
+                        }
+
+                        String key = keyResult.result().value().toString();
+                        var valueResult = env.readVariable(key);
+
+                        if (!valueResult.isCorrect() || valueResult.result().value() == null) {
+                            return "";
+                        }
+
+                        return valueResult.result().value().toString();
+                    })
+            ));
 
             InputStream codeStream = new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8));
 
