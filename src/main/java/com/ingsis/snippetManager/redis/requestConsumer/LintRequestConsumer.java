@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.stream.StreamReceiver;
 import org.springframework.stereotype.Component;
 
@@ -35,10 +36,10 @@ public class LintRequestConsumer extends RedisStreamConsumer<String> {
     private final SnippetStatusService snippetStatusService;
     private final ObjectMapper objectMapper;
     private final ExecutorService executor = Executors.newFixedThreadPool(10);
-    private final RedisTemplate<String, String> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     public LintRequestConsumer(@Value("${redis.streams.lintRequest}") String streamName,
-            @Value("${redis.groups.lint}") String groupName, RedisTemplate<String, String> redisTemplate,
+            @Value("${redis.groups.lint}") String groupName, StringRedisTemplate redisTemplate,
             SnippetRunnerService lintingService, LintResultProducer lintResultProducer, ObjectMapper objectMapper,
             SnippetStatusService snippetStatusService) {
 

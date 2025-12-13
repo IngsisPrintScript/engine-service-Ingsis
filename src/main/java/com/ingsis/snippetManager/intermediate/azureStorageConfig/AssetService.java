@@ -48,34 +48,54 @@ public class AssetService {
 
             return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
         } catch (HttpClientErrorException e) {
-            logger.error("Snippet not found, status: {}", e.getStatusCode());
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            logger.error("Error getting snippet", e);
             return ResponseEntity.badRequest().body("Error getting snippet: " + e.getMessage());
         }
     }
 
-    public ResponseEntity<String> saveSnippet(UUID snippetId, String content) {
+    public ResponseEntity<UUID> saveSnippet(UUID snippetId,String content) {
         try {
-            String url = buildUrl(snippetId) + "/formatted";
-            logger.info("Url : {}", url);
-            byte[] bodyBytes = content.getBytes(StandardCharsets.UTF_8);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-            headers.setAll(getCorrelationHeader());
-            logger.info(new String(bodyBytes, StandardCharsets.UTF_8));
-            HttpEntity<byte[]> request = new HttpEntity<>(bodyBytes, headers);
-            restTemplate.exchange(url, HttpMethod.PUT, request, Void.class);
-            logger.info("Snippet saved at Url: {}", url);
-            return ResponseEntity.ok("Snippet saved successfully.");
+            logger.info("{}",snippetId);
+            String url = buildUrl(snippetId);
+            logger.info("\n{}",content);
+            saveSnippet(url, content);
+            return ResponseEntity.ok(snippetId);
         } catch (HttpClientErrorException e) {
-            logger.error("Not saved content, status: {}, body: {}", e.getStatusCode(), e.getResponseBodyAsString());
-            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+            logger.info("{}",e.getStatusCode());
+            return ResponseEntity.status(e.getStatusCode()).body(snippetId);
         } catch (Exception e) {
-            logger.error("Error saving snippet", e);
-            return ResponseEntity.badRequest().body("Error saving snippet: " + e.getMessage());
+            logger.info("{}",e.getMessage());
+            return ResponseEntity.badRequest().body(snippetId);
         }
+    }
+
+    public void saveOriginalSnippet(UUID snippetId, UUID formatId) {
+        try {
+            String url = buildUrl(formatId);
+            ResponseEntity<String> content = getSnippet(snippetId);
+            if(content.getStatusCode().is2xxSuccessful() || content.getBody() == null){
+                return;
+            }
+            saveSnippet(url, content.getBody());
+            ResponseEntity.ok(formatId);
+        } catch (HttpClientErrorException e) {
+            logger.info("{}",e.getStatusCode());
+            ResponseEntity.status(e.getStatusCode()).body(formatId);
+        } catch (Exception e) {
+            logger.info("{}",e.getMessage());
+            ResponseEntity.badRequest().body(formatId);
+        }
+    }
+
+    private void saveSnippet(String url, String content) {
+        byte[] bodyBytes = content.getBytes(StandardCharsets.UTF_8);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setAll(getCorrelationHeader());
+        HttpEntity<byte[]> request = new HttpEntity<>(bodyBytes, headers);
+        restTemplate.exchange(url, HttpMethod.PUT, request, Void.class);
+        logger.info("saved");
     }
 
     private java.util.Map<String, String> getCorrelationHeader() {

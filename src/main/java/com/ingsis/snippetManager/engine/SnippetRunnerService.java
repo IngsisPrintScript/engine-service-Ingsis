@@ -43,27 +43,22 @@ public class SnippetRunnerService {
         if (code == null) {
             return new RunSnippetResponseDTO(List.of(), List.of("Snippet not found"));
         }
-
         EngineAdapter adapter = createAdapter(language);
         return adapter.execute(code, version, inputs, envs);
     }
 
-    public Result<String> format(UUID snippetId, Version version, FormatterSupportedRules rules,
+    public Result<UUID> format(UUID snippetId,UUID formatId, Version version, FormatterSupportedRules rules,
             SupportedLanguage language) {
         InputStream src = loadSnippet(snippetId);
         if (src == null) {
             return new IncorrectResult<>("Snippet not found");
         }
-
         EngineAdapter adapter = createAdapter(language);
-        InputStream rulesStream = rulesToInputStream(rules);
-
-        Result<String> formattedResult = adapter.format(src, rulesStream, version);
+        Result<String> formattedResult = adapter.format(src, rules, version);
         if (!formattedResult.isCorrect()) {
-            return formattedResult;
+            return new IncorrectResult<>("Failed to format");
         }
-
-        return saveSnippet(snippetId, formattedResult.result());
+        return saveSnippet(snippetId,formatId,formattedResult.result());
     }
 
     public Result<String> analyze(UUID snippetId, Version version, LintSupportedRules rules,
@@ -74,9 +69,7 @@ public class SnippetRunnerService {
         }
 
         EngineAdapter adapter = createAdapter(language);
-        InputStream rulesStream = rulesToInputStream(rules);
-
-        return adapter.analyze(src, rulesStream, version);
+        return adapter.analyze(src, rules, version);
     }
 
     public Result<List<String>> validate(UUID snippetId, SupportedLanguage language, Version version) {
@@ -100,13 +93,19 @@ public class SnippetRunnerService {
             Version parsedVersion = Version.fromString(dto.version());
 
             RunSnippetResponseDTO execution = adapter.execute(code, parsedVersion, dto.inputs(), dto.envs());
+            List<String> actual = normalize(execution.outputs());
+            List<String> expected = normalize(dto.outputs());
             logger.info("{}", execution.errors());
             if (!execution.errors().isEmpty()) {
                 return new TestResponseDTO(execution.outputs(), execution.errors(), SnippetTestStatus.FAILED);
             }
-            logger.info("{} {}", execution.outputs(), dto.outputs());
-            if (!execution.outputs().equals(dto.outputs())) {
-                return new TestResponseDTO(execution.outputs(), List.of("Output mismatch"), SnippetTestStatus.FAILED);
+            logger.info("{} {}", actual, expected);
+            if (!actual.equals(expected)) {
+                return new TestResponseDTO(
+                        execution.outputs(),
+                        List.of("Output mismatch"),
+                        SnippetTestStatus.FAILED
+                );
             }
             logger.info("{} {} {}", dto.inputs(), dto.outputs(), execution.outputs());
             return new TestResponseDTO(execution.outputs(), List.of(), SnippetTestStatus.PASSED);
@@ -130,21 +129,19 @@ public class SnippetRunnerService {
         return new ByteArrayInputStream(response.getBody().getBytes(StandardCharsets.UTF_8));
     }
 
-    private Result<String> saveSnippet(UUID id, String newContent) {
+    private Result<UUID> saveSnippet(UUID snippetId,UUID formatId,String newContent) {
         try {
-            return new CorrectResult<>(assetService.saveSnippet(id, newContent).getBody());
+            assetService.saveOriginalSnippet(snippetId,formatId);
+            return new CorrectResult<>(assetService.saveSnippet(snippetId,newContent).getBody());
         } catch (Exception e) {
             return new IncorrectResult<>("Failed to save snippet");
         }
     }
 
-    private InputStream rulesToInputStream(Object rulesObj) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            String json = mapper.writeValueAsString(rulesObj);
-            return new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to convert rules JSON", e);
-        }
+    private List<String> normalize(List<String> outputs) {
+        return outputs.stream()
+                .map(s -> s.replace("\r\n", "\n"))
+                .map(String::trim)
+                .toList();
     }
 }

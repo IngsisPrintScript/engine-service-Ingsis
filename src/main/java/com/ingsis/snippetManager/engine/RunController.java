@@ -12,6 +12,8 @@ import com.ingsis.snippetManager.engine.dto.response.ValidationResult;
 import com.ingsis.utils.result.IncorrectResult;
 import com.ingsis.utils.result.Result;
 import java.util.List;
+import java.util.UUID;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -37,8 +39,8 @@ public class RunController {
     }
 
     @PostMapping("/format")
-    public String format(@AuthenticationPrincipal Jwt jwt, @RequestBody FormatRequestDTO dto) {
-        return service.format(dto.snippetId(), Version.fromString(dto.version()), dto.formatterSupportedRules(),
+    public UUID format(@AuthenticationPrincipal Jwt jwt, @RequestBody FormatRequestDTO dto) {
+        return service.format(dto.snippetId(),dto.formatId(), Version.fromString(dto.version()), dto.formatterSupportedRules(),
                 dto.language()).result();
     }
 

@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.stream.StreamReceiver;
 import org.springframework.stereotype.Component;
 
@@ -35,10 +36,10 @@ public class FormatRequestConsumer extends RedisStreamConsumer<String> {
     private final ObjectMapper objectMapper;
     private final ExecutorService executor = Executors.newFixedThreadPool(10);
     private final SnippetRunnerService service;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     public FormatRequestConsumer(@Value("${redis.streams.formatRequest}") String streamName,
-            @Value("${redis.groups.format}") String groupName, RedisTemplate<String, String> redisTemplate,
+            @Value("${redis.groups.format}") String groupName, StringRedisTemplate redisTemplate,
             FormatResultProducer formatResultProducer, ObjectMapper objectMapper, SnippetRunnerService service,
             SnippetStatusService snippetStatusService) {
 
@@ -67,7 +68,7 @@ public class FormatRequestConsumer extends RedisStreamConsumer<String> {
 
                 Version version = Version.fromString(event.version());
 
-                Result<String> formatted = service.format(snippetId, version, event.rules(), event.language());
+                Result<UUID> formatted = service.format(snippetId,event.formatId(), version, event.rules(), event.language());
 
                 FormatStatus finalStatus;
 
