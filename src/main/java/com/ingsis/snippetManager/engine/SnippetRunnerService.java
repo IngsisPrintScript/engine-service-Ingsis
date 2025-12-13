@@ -78,7 +78,7 @@ public class SnippetRunnerService {
             logger.info("Snippet validated successfully");
             return new CorrectResult<>(List.of());
         }
-        logger.info("Snippet failed successfully");
+        logger.info("Invalid snippet:\n" + String.join("\n", exec.errors()));
         return new IncorrectResult<>("Invalid snippet:\n" + String.join("\n", exec.errors()));
     }
 

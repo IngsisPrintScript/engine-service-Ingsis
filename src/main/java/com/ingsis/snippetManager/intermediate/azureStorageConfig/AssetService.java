@@ -56,9 +56,7 @@ public class AssetService {
 
     public ResponseEntity<UUID> saveSnippet(UUID snippetId,String content) {
         try {
-            logger.info("{}",snippetId);
             String url = buildUrl(snippetId);
-            logger.info("\n{}",content);
             saveSnippet(url, content);
             return ResponseEntity.ok(snippetId);
         } catch (HttpClientErrorException e) {
@@ -95,7 +93,6 @@ public class AssetService {
         headers.setAll(getCorrelationHeader());
         HttpEntity<byte[]> request = new HttpEntity<>(bodyBytes, headers);
         restTemplate.exchange(url, HttpMethod.PUT, request, Void.class);
-        logger.info("saved");
     }
 
     private java.util.Map<String, String> getCorrelationHeader() {
