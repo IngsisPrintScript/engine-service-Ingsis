@@ -30,8 +30,8 @@ WORKDIR /app
 # App
 COPY --from=builder /home/gradle/project/build/libs/*.jar app.jar
 
-COPY --from=builder /home/gradle/project/build/newrelic/newrelic.jar /app/newrelic/newrelic.jar
-COPY --from=builder /home/gradle/project/build/newrelic/newrelic.yml /app/newrelic/newrelic.yml
+COPY --from=builder /home/gradle/project/build/newrelic/newrelic/newrelic.jar /app/newrelic/newrelic.jar
+COPY --from=builder /home/gradle/project/build/newrelic/newrelic/newrelic.yml /app/newrelic/newrelic.yml
 
 ENV JAVA_OPTS=""
 ENV NEW_RELIC_LOG=stdout
