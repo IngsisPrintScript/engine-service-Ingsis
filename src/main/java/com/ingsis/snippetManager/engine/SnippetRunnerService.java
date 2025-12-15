@@ -1,6 +1,5 @@
 package com.ingsis.snippetManager.engine;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingsis.engine.Engine;
 import com.ingsis.engine.versions.Version;
 import com.ingsis.snippetManager.engine.dto.request.TestRequestDTO;
@@ -47,7 +46,7 @@ public class SnippetRunnerService {
         return adapter.execute(code, version, inputs, envs);
     }
 
-    public Result<UUID> format(UUID snippetId,UUID formatId, Version version, FormatterSupportedRules rules,
+    public Result<UUID> format(UUID snippetId, UUID formatId, Version version, FormatterSupportedRules rules,
             SupportedLanguage language) {
         InputStream src = loadSnippet(snippetId);
         if (src == null) {
@@ -58,7 +57,7 @@ public class SnippetRunnerService {
         if (!formattedResult.isCorrect()) {
             return new IncorrectResult<>("Failed to format");
         }
-        return saveSnippet(snippetId,formatId,formattedResult.result());
+        return saveSnippet(snippetId, formatId, formattedResult.result());
     }
 
     public Result<String> analyze(UUID snippetId, Version version, LintSupportedRules rules,
@@ -101,11 +100,7 @@ public class SnippetRunnerService {
             }
             logger.info("{} {}", actual, expected);
             if (!actual.equals(expected)) {
-                return new TestResponseDTO(
-                        execution.outputs(),
-                        List.of("Output mismatch"),
-                        SnippetTestStatus.FAILED
-                );
+                return new TestResponseDTO(execution.outputs(), List.of("Output mismatch"), SnippetTestStatus.FAILED);
             }
             logger.info("{} {} {}", dto.inputs(), dto.outputs(), execution.outputs());
             return new TestResponseDTO(execution.outputs(), List.of(), SnippetTestStatus.PASSED);
@@ -129,19 +124,16 @@ public class SnippetRunnerService {
         return new ByteArrayInputStream(response.getBody().getBytes(StandardCharsets.UTF_8));
     }
 
-    private Result<UUID> saveSnippet(UUID snippetId,UUID formatId,String newContent) {
+    private Result<UUID> saveSnippet(UUID snippetId, UUID formatId, String newContent) {
         try {
-            assetService.saveOriginalSnippet(snippetId,formatId);
-            return new CorrectResult<>(assetService.saveSnippet(snippetId,newContent).getBody());
+            assetService.saveOriginalSnippet(snippetId, formatId);
+            return new CorrectResult<>(assetService.saveSnippet(snippetId, newContent).getBody());
         } catch (Exception e) {
             return new IncorrectResult<>("Failed to save snippet");
         }
     }
 
     private List<String> normalize(List<String> outputs) {
-        return outputs.stream()
-                .map(s -> s.replace("\r\n", "\n"))
-                .map(String::trim)
-                .toList();
+        return outputs.stream().map(s -> s.replace("\r\n", "\n")).map(String::trim).toList();
     }
 }
