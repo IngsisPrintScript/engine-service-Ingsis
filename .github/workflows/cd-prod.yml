@@ -1,0 +1,21 @@
+name: Build & Push Snippet Image - prod
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+  id-token: write
+  packages: write
+
+jobs:
+  call-cd-prod:
+    uses: IngsisPrintScript/workflows-and-actions/.github/workflows/deploy.yaml@main
+    with:
+      java-version: "21"
+      environment: "production"
+      service_name: "engine"
+      image_route: "ghcr.io/ingsisprintscript/engine-service:prod"
+    secrets: inherit
