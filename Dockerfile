@@ -30,15 +30,10 @@ WORKDIR /app
 # App
 COPY --from=builder /home/gradle/project/build/libs/*.jar app.jar
 
-# New Relic (runtime, no Gradle)
-RUN apk add --no-cache wget unzip \
- && mkdir -p /app/newrelic \
- && wget -q https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip \
- && unzip newrelic-java.zip -d /app/newrelic \
- && rm newrelic-java.zip
-
-# Config New Relic
-COPY newrelic.yml /app/newrelic/newrelic.yml
+# New Relic: copiar desde el build (ya descargado por Gradle o repo)
+# OPCIÓN A: si lo tenés en el repo
+COPY newrelic/newrelic.jar /app/newrelic/newrelic.jar
+COPY newrelic/newrelic.yml /app/newrelic/newrelic.yml
 
 ENV JAVA_OPTS=""
 ENV NEW_RELIC_LOG=stdout
