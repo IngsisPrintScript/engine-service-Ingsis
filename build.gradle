@@ -122,6 +122,10 @@ tasks.named("build") {
     dependsOn("installGitHooks")
 }
 
+tasks.named("bootJar") {
+    dependsOn unzipNewRelic
+}
+
 spotless {
     java {
         target 'src/**/*.java'
