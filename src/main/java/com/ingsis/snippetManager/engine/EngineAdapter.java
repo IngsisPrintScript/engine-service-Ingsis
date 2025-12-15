@@ -14,9 +14,6 @@ import com.ingsis.utils.result.Result;
 import com.ingsis.utils.runtime.DefaultRuntime;
 import com.ingsis.utils.runtime.environment.Environment;
 import com.ingsis.utils.type.types.Types;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -28,6 +25,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EngineAdapter {
 
@@ -56,57 +55,45 @@ public class EngineAdapter {
 
             /* readInput() */
             env.createFunction("readInput", new LinkedHashMap<>(), Types.STRING);
-            env.updateFunction("readInput", List.of(
-                    new NativeExpressionNode(() ->
-                            index.get() < inputs.size()
-                                    ? inputs.get(index.getAndIncrement())
-                                    : ""
-                    )
-            ));
+            env.updateFunction("readInput", List.of(new NativeExpressionNode(
+                    () -> index.get() < inputs.size() ? inputs.get(index.getAndIncrement()) : "")));
             env.createFunction("readNumber", new LinkedHashMap<>(), Types.NUMBER);
-            env.updateFunction("readNumber", List.of(
-                    new NativeExpressionNode(() -> {
-                        if (index.get() >= inputs.size()) {
-                            return 0.0;
-                        }
-                        try {
-                            return Double.parseDouble(inputs.get(index.getAndIncrement()));
-                        } catch (NumberFormatException e) {
-                            return 0.0;
-                        }
-                    })
-            ));
+            env.updateFunction("readNumber", List.of(new NativeExpressionNode(() -> {
+                if (index.get() >= inputs.size()) {
+                    return 0.0;
+                }
+                try {
+                    return Double.parseDouble(inputs.get(index.getAndIncrement()));
+                } catch (NumberFormatException e) {
+                    return 0.0;
+                }
+            })));
 
             /* readEnv(key) */
             LinkedHashMap<String, Types> args = new LinkedHashMap<>();
             args.put("key", Types.STRING);
 
             env.createFunction("readEnv", args, Types.STRING);
-            env.updateFunction("readEnv", List.of(
-                    new NativeExpressionNode(() -> {
-                        var keyResult = env.readVariable("key");
+            env.updateFunction("readEnv", List.of(new NativeExpressionNode(() -> {
+                var keyResult = env.readVariable("key");
 
-                        if (!keyResult.isCorrect() || keyResult.result().value() == null) {
-                            return "";
-                        }
+                if (!keyResult.isCorrect() || keyResult.result().value() == null) {
+                    return "";
+                }
 
-                        String key = keyResult.result().value().toString();
-                        var valueResult = env.readVariable(key);
+                String key = keyResult.result().value().toString();
+                var valueResult = env.readVariable(key);
 
-                        if (!valueResult.isCorrect() || valueResult.result().value() == null) {
-                            return "";
-                        }
+                if (!valueResult.isCorrect() || valueResult.result().value() == null) {
+                    return "";
+                }
 
-                        return valueResult.result().value().toString();
-                    })
-            ));
+                return valueResult.result().value().toString();
+            })));
             InputStream codeStream = new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8));
             Result<String> result = engine.interpret(codeStream, version);
             if (!result.isCorrect()) {
-                return new RunSnippetResponseDTO(
-                        emitter.outputs(),
-                        List.of(result.error())
-                );
+                return new RunSnippetResponseDTO(emitter.outputs(), List.of(result.error()));
             }
             return new RunSnippetResponseDTO(emitter.outputs(), List.of());
 
@@ -154,7 +141,8 @@ public class EngineAdapter {
 
     private void resetRuntime() {
         DefaultRuntime runtime = DefaultRuntime.getInstance();
-        while (runtime.pop().isCorrect()) {}
+        while (runtime.pop().isCorrect()) {
+        }
         runtime.setEmitter(null);
         runtime.setExecutionError(null);
         runtime.push();
@@ -162,42 +150,19 @@ public class EngineAdapter {
     private InputStream rulesToInputStream(FormatterSupportedRules rules) {
         try {
             Map<String, Object> formatterRules = new HashMap<>();
-            formatterRules.put(
-                    "enforce-spacing-before-colon-in-declaration",
-                    rules.hasPreAscriptionSpace()
-            );
-            formatterRules.put(
-                    "enforce-spacing-after-colon-in-declaration",
-                    rules.hasPostAscriptionSpace()
-            );
-            formatterRules.put(
-                    "enforce-spacing-around-equals",
-                    rules.isAssignationSpaced()
-            );
-            formatterRules.put(
-                    "enforce-no-spacing-around-equals",
-                    !rules.isAssignationSpaced()
-            );
-            formatterRules.put(
-                    "indent-inside-if",
-                    rules.indentationInsideConditionals()
-            );
-            formatterRules.put(
-                    "line-breaks-after-println",
-                    rules.printlnSeparationLines()
-            );
-            formatterRules.put(
-                    "mandatory-single-space-separation",
-                    true
-            );
+            formatterRules.put("enforce-spacing-before-colon-in-declaration", rules.hasPreAscriptionSpace());
+            formatterRules.put("enforce-spacing-after-colon-in-declaration", rules.hasPostAscriptionSpace());
+            formatterRules.put("enforce-spacing-around-equals", rules.isAssignationSpaced());
+            formatterRules.put("enforce-no-spacing-around-equals", !rules.isAssignationSpaced());
+            formatterRules.put("indent-inside-if", rules.indentationInsideConditionals());
+            formatterRules.put("line-breaks-after-println", rules.printlnSeparationLines());
+            formatterRules.put("mandatory-single-space-separation", true);
 
             ObjectMapper mapper = new ObjectMapper();
 
             logger.info("ENGINE RULES JSON => {}", mapper.writeValueAsString(formatterRules));
 
-            return new ByteArrayInputStream(
-                    mapper.writeValueAsBytes(formatterRules)
-            );
+            return new ByteArrayInputStream(mapper.writeValueAsBytes(formatterRules));
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to convert formatter rules", e);
@@ -208,30 +173,19 @@ public class EngineAdapter {
         try {
             Map<String, Object> lintRules = new HashMap<>();
 
-            lintRules.put(
-                    "mandatory-variable-or-literal-in-println",
-                    rules.mandatoryVariableOrLiteralInPrintln()
-            );
+            lintRules.put("mandatory-variable-or-literal-in-println", rules.mandatoryVariableOrLiteralInPrintln());
 
-            lintRules.put(
-                    "mandatory-variable-or-literal-in-readInput",
-                    rules.mandatoryVariableOrLiteralInReadInput()
-            );
+            lintRules.put("mandatory-variable-or-literal-in-readInput", rules.mandatoryVariableOrLiteralInReadInput());
 
             if (rules.identifierFormat() != null) {
-                lintRules.put(
-                        "identifier_format",
-                        rules.identifierFormat()
-                );
+                lintRules.put("identifier_format", rules.identifierFormat());
             }
 
             ObjectMapper mapper = new ObjectMapper();
 
             logger.info("ENGINE LINT RULES JSON => {}", mapper.writeValueAsString(lintRules));
 
-            return new ByteArrayInputStream(
-                    mapper.writeValueAsBytes(lintRules)
-            );
+            return new ByteArrayInputStream(mapper.writeValueAsBytes(lintRules));
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to convert lint rules", e);

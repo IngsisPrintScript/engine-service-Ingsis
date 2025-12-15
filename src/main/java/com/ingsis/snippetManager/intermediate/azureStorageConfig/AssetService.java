@@ -54,16 +54,16 @@ public class AssetService {
         }
     }
 
-    public ResponseEntity<UUID> saveSnippet(UUID snippetId,String content) {
+    public ResponseEntity<UUID> saveSnippet(UUID snippetId, String content) {
         try {
             String url = buildUrl(snippetId);
             saveSnippet(url, content);
             return ResponseEntity.ok(snippetId);
         } catch (HttpClientErrorException e) {
-            logger.info("{}",e.getStatusCode());
+            logger.info("{}", e.getStatusCode());
             return ResponseEntity.status(e.getStatusCode()).body(snippetId);
         } catch (Exception e) {
-            logger.info("{}",e.getMessage());
+            logger.info("{}", e.getMessage());
             return ResponseEntity.badRequest().body(snippetId);
         }
     }
@@ -72,16 +72,16 @@ public class AssetService {
         try {
             String url = buildUrl(formatId);
             ResponseEntity<String> content = getSnippet(snippetId);
-            if(content.getStatusCode().is2xxSuccessful() || content.getBody() == null){
+            if (content.getStatusCode().is2xxSuccessful() || content.getBody() == null) {
                 return;
             }
             saveSnippet(url, content.getBody());
             ResponseEntity.ok(formatId);
         } catch (HttpClientErrorException e) {
-            logger.info("{}",e.getStatusCode());
+            logger.info("{}", e.getStatusCode());
             ResponseEntity.status(e.getStatusCode()).body(formatId);
         } catch (Exception e) {
-            logger.info("{}",e.getMessage());
+            logger.info("{}", e.getMessage());
             ResponseEntity.badRequest().body(formatId);
         }
     }
