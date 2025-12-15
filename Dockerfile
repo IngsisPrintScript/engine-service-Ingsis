@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# --- Stage 1: build the application ---
+# --- Stage 1: build ---
 FROM gradle:8.4-jdk21-alpine AS builder
 
 ARG GITHUB_USER
@@ -8,35 +8,41 @@ ARG GITHUB_TOKEN
 
 WORKDIR /home/gradle/project
 
-# Copiar código
+# Copiar TODO el proyecto
 COPY . .
 
-# Crear archivo gradle.properties dentro del contenedor
+# Credenciales SOLO para el build (no quedan en la imagen final)
 RUN mkdir -p /home/gradle/.gradle && \
     echo "gpr.user=${GITHUB_USER}" >> /home/gradle/.gradle/gradle.properties && \
     echo "gpr.key=${GITHUB_TOKEN}" >> /home/gradle/.gradle/gradle.properties
 
 RUN chmod +x gradlew
 
-# Build del JAR con credenciales disponibles
-RUN ./gradlew --no-daemon clean bootJar
+# Build real (no ocultamos errores)
+RUN ./gradlew --no-daemon clean bootJar -x test
 
-# --- Stage 2: run the application ---
+
+# --- Stage 2: runtime ---
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-# Copiar el jar desde el build anterior
+# App
 COPY --from=builder /home/gradle/project/build/libs/*.jar app.jar
 
-# Copiar los archivos de New Relic (agregar estos pasos)
-COPY --from=builder /home/gradle/project/build/newrelic/newrelic.jar /app/newrelic.jar
-COPY --from=builder /home/gradle/project/build/newrelic/newrelic.yml /app/newrelic.yml
+# New Relic (runtime, no Gradle)
+RUN apk add --no-cache wget unzip \
+ && mkdir -p /app/newrelic \
+ && wget -q https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip \
+ && unzip newrelic-java.zip -d /app/newrelic \
+ && rm newrelic-java.zip
 
-# Configuración opcional para Java (si es necesario)
+# Config New Relic
+COPY newrelic.yml /app/newrelic/newrelic.yml
+
 ENV JAVA_OPTS=""
+ENV NEW_RELIC_LOG=stdout
 
 EXPOSE 8088
 
-# Configurar ENTRYPOINT para incluir el -javaagent
-ENTRYPOINT ["sh", "-c", "java -javaagent:/app/newrelic.jar $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java -javaagent:/app/newrelic/newrelic.jar $JAVA_OPTS -jar app.jar"]

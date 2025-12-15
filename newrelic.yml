@@ -1,0 +1,10 @@
+common: &default_settings
+  license_key: ${NEW_RELIC_LICENSE_KEY}
+  app_name: ${NEW_RELIC_APP_NAME}
+  log_level: info
+
+development:
+  <<: *default_settings
+
+production:
+  <<: *default_settings
