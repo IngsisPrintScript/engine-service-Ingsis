@@ -26,10 +26,17 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
+# Copiar el jar desde el build anterior
 COPY --from=builder /home/gradle/project/build/libs/*.jar app.jar
 
+# Copiar los archivos de New Relic (agregar estos pasos)
+COPY --from=builder /home/gradle/project/build/newrelic/newrelic.jar /app/newrelic.jar
+COPY --from=builder /home/gradle/project/build/newrelic/newrelic.yml /app/newrelic.yml
+
+# Configuración opcional para Java (si es necesario)
 ENV JAVA_OPTS=""
 
 EXPOSE 8088
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+# Configurar ENTRYPOINT para incluir el -javaagent
+ENTRYPOINT ["sh", "-c", "java -javaagent:/app/newrelic.jar $JAVA_OPTS -jar app.jar"]

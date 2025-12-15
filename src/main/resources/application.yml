@@ -1,27 +1,54 @@
 spring:
   application:
-    name: ingsis
+    name: ingsis-snippet-service
+
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: ${AUTH0_ISSUER_URI}
+          audiences: ${AUTH0_AUDIENCE}
+
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-    
+      timeout: 2s
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 1
+
 server:
-  port: ${API_PORT}
+  port: ${API_PORT:8080}
   address: 0.0.0.0
-  
-okta:
-  oauth2:
-    # Replace with the domain of your Auth0 tenant.
-    issuer: ${AUTH0_ISSUER_URI}
-    # Replace with the API Identifier for your Auth0 API.
-    audience: ${AUTH0_AUDIENCE}
-    
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-exception: false
+  tomcat:
+    connection-timeout: 5s
+    threads:
+      max: 200
+      min-spare: 10
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} %-5level [%X{trace.id:-}] %logger{36} - %msg%n"
+
 redis:
   streams:
     lintRequest: ${REDIS_STREAM_REQUEST_LINT_KEY}
@@ -33,7 +60,7 @@ redis:
   groups:
     lint: ${REDIS_GROUP_LINT_KEY}
     format: ${REDIS_GROUP_FORMAT_KEY}
-    test: ${REDIS_GROUP_TEST_KEY} 
-    
+    test: ${REDIS_GROUP_TEST_KEY}
+
 bucket:
   url: ${BUCKET_URL}
