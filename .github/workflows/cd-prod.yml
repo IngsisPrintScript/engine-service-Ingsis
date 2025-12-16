@@ -17,5 +17,5 @@ jobs:
       java-version: "21"
       environment: "production"
       service_name: "engine"
-      image_route: "ghcr.io/ingsisprintscript/engine-service:prod"
+      image_route: "ghcr.io/ingsisprintscript/engine-service:dev"
     secrets: inherit
