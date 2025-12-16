@@ -21,20 +21,22 @@ java {
 
 repositories {
     mavenCentral()
+
     maven {
         name = "GitHubPackages"
-        url = uri("https://maven.pkg.github.com/austral-ingsis/*")
-        credentials {
-            username = findProperty("gpr.user")
-            password = findProperty("gpr.key")
-        }
-    }
-    maven {
-        name = "PrintScriptPackages"
         url = uri("https://maven.pkg.github.com/IngsisPrintScript/PrintScript")
         credentials {
-            username = findProperty("gpr.user")
-            password = findProperty("gpr.key")
+            username = System.getenv("GITHUB_USER") ?: findProperty("gpr.user")
+            password = System.getenv("GITHUB_TOKEN") ?: findProperty("gpr.key")
+        }
+    }
+
+    maven {
+        name = "AustralPackages"
+        url = uri("https://maven.pkg.github.com/austral-ingsis/*")
+        credentials {
+            username = System.getenv("GITHUB_USER") ?: findProperty("gpr.user")
+            password = System.getenv("GITHUB_TOKEN") ?: findProperty("gpr.key")
         }
     }
 }
@@ -45,9 +47,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-    implementation 'PrintScript:com.ingsis.engine:1.0.0-ad80526'
-    implementation 'PrintScript:com.ingsis.engine:0.0.0-ci.85.6a95e4c'
-    implementation 'PrintScript:com.ingsis.utils:0.0.0-ci.85.6a95e4c'
+    implementation 'PrintScript:com.ingsis.engine:+'
+    implementation 'PrintScript:com.ingsis.utils:+'
 
     implementation 'org.austral.ingsis:redis-streams-mvc:0.1.13'
 

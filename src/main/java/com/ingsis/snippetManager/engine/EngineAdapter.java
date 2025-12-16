@@ -5,26 +5,18 @@ import com.ingsis.engine.Engine;
 import com.ingsis.engine.versions.Version;
 import com.ingsis.snippetManager.engine.dto.response.RunSnippetResponseDTO;
 import com.ingsis.snippetManager.engine.runner.CollectingEmitter;
-import com.ingsis.snippetManager.engine.runner.NativeExpressionNode;
+import com.ingsis.snippetManager.engine.runner.InputSupplierAdapter;
 import com.ingsis.snippetManager.engine.supportedRules.FormatterSupportedRules;
 import com.ingsis.snippetManager.engine.supportedRules.LintSupportedRules;
 import com.ingsis.utils.result.CorrectResult;
 import com.ingsis.utils.result.IncorrectResult;
 import com.ingsis.utils.result.Result;
-import com.ingsis.utils.runtime.DefaultRuntime;
-import com.ingsis.utils.runtime.environment.Environment;
-import com.ingsis.utils.type.types.Types;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,115 +30,35 @@ public class EngineAdapter {
     }
 
     public RunSnippetResponseDTO execute(String code, Version version, List<String> inputs, Map<String, String> envs) {
-
         CollectingEmitter emitter = new CollectingEmitter();
-        DefaultRuntime runtime = DefaultRuntime.getInstance();
-        runtime.setEmitter(emitter);
-
+        InputSupplierAdapter supplierAdapter = new InputSupplierAdapter(inputs);
         try {
-            runtime.push();
-            Environment env = runtime.getCurrentEnvironment();
-
-            for (var e : envs.entrySet()) {
-                env.createVariable(e.getKey(), Types.STRING, e.getValue(), false);
-            }
-
-            AtomicInteger index = new AtomicInteger(0);
-
-            /* readInput() */
-            env.createFunction("readInput", new LinkedHashMap<>(), Types.STRING);
-            env.updateFunction("readInput", List.of(new NativeExpressionNode(
-                    () -> index.get() < inputs.size() ? inputs.get(index.getAndIncrement()) : "")));
-            env.createFunction("readNumber", new LinkedHashMap<>(), Types.NUMBER);
-            env.updateFunction("readNumber", List.of(new NativeExpressionNode(() -> {
-                if (index.get() >= inputs.size()) {
-                    return 0.0;
-                }
-                try {
-                    return Double.parseDouble(inputs.get(index.getAndIncrement()));
-                } catch (NumberFormatException e) {
-                    return 0.0;
-                }
-            })));
-
-            /* readEnv(key) */
-            LinkedHashMap<String, Types> args = new LinkedHashMap<>();
-            args.put("key", Types.STRING);
-
-            env.createFunction("readEnv", args, Types.STRING);
-            env.updateFunction("readEnv", List.of(new NativeExpressionNode(() -> {
-                var keyResult = env.readVariable("key");
-
-                if (!keyResult.isCorrect() || keyResult.result().value() == null) {
-                    return "";
-                }
-
-                String key = keyResult.result().value().toString();
-                var valueResult = env.readVariable(key);
-
-                if (!valueResult.isCorrect() || valueResult.result().value() == null) {
-                    return "";
-                }
-
-                return valueResult.result().value().toString();
-            })));
-            InputStream codeStream = new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8));
-            Result<String> result = engine.interpret(codeStream, version);
-            if (!result.isCorrect()) {
-                return new RunSnippetResponseDTO(emitter.outputs(), List.of(result.error()));
-            }
+            engine.interpret(version, emitter, supplierAdapter, new ByteArrayInputStream(code.getBytes()));
             return new RunSnippetResponseDTO(emitter.outputs(), List.of());
-
         } catch (Exception e) {
             return new RunSnippetResponseDTO(emitter.outputs(), List.of(e.getMessage()));
-        } finally {
-            runtime.pop();
         }
     }
 
     public Result<String> analyze(InputStream src, LintSupportedRules config, Version version) {
-        resetRuntime();
-        ByteArrayOutputStream errStream = new ByteArrayOutputStream();
-        PrintStream originalErr = System.err;
-        System.setErr(new PrintStream(errStream));
-        DefaultRuntime runtime = DefaultRuntime.getInstance();
-        InputStream rules = lintRulesToInputStream(config);
-        try {
-            Result<String> r = engine.analyze(src, rules, version);
-            if (!r.isCorrect()) {
-                return new IncorrectResult<>(r.error() + "\n" + errStream.toString());
-            }
-            return new CorrectResult<>("No lint errors");
-        } finally {
-            runtime.pop();
-            System.setErr(originalErr);
+        Result<String> r = engine.analyze(src, lintRulesToInputStream(config), version);
+        if (!r.isCorrect()) {
+            return new IncorrectResult<>(r.error());
         }
+        return new CorrectResult<>("No lint errors");
+
     }
 
     public Result<String> format(InputStream src, FormatterSupportedRules formatRules, Version version) {
-        resetRuntime();
         StringWriter writer = new StringWriter();
-        DefaultRuntime runtime = DefaultRuntime.getInstance();
         InputStream rules = rulesToInputStream(formatRules);
-        try {
-            Result<String> r = engine.format(src, rules, writer, version);
-            if (!r.isCorrect()) {
-                return r;
-            }
-            return new CorrectResult<>(writer.toString());
-        } finally {
-            runtime.pop();
+        Result<String> r = engine.format(src, rules, writer, version);
+        if (!r.isCorrect()) {
+            return r;
         }
+        return new CorrectResult<>(writer.toString());
     }
 
-    private void resetRuntime() {
-        DefaultRuntime runtime = DefaultRuntime.getInstance();
-        while (runtime.pop().isCorrect()) {
-        }
-        runtime.setEmitter(null);
-        runtime.setExecutionError(null);
-        runtime.push();
-    }
     private InputStream rulesToInputStream(FormatterSupportedRules rules) {
         try {
             Map<String, Object> formatterRules = new HashMap<>();
