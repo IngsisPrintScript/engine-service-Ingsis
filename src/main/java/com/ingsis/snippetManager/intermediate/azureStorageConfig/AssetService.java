@@ -72,7 +72,7 @@ public class AssetService {
         try {
             String url = buildUrl(formatId);
             ResponseEntity<String> content = getSnippet(snippetId);
-            if (content.getStatusCode().is2xxSuccessful() || content.getBody() == null) {
+            if (!content.getStatusCode().is2xxSuccessful() || content.getBody() == null) {
                 return;
             }
             saveSnippet(url, content.getBody());

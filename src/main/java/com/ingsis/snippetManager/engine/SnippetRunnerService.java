@@ -57,7 +57,8 @@ public class SnippetRunnerService {
         if (!formattedResult.isCorrect()) {
             return new IncorrectResult<>("Failed to format");
         }
-        return saveSnippet(snippetId, formatId, formattedResult.result());
+        logger.info("saved {}", formatId);
+        return saveSnippet(snippetId, formattedResult.result());
     }
 
     public Result<String> analyze(UUID snippetId, Version version, LintSupportedRules rules,
@@ -124,10 +125,10 @@ public class SnippetRunnerService {
         return new ByteArrayInputStream(response.getBody().getBytes(StandardCharsets.UTF_8));
     }
 
-    private Result<UUID> saveSnippet(UUID snippetId, UUID formatId, String newContent) {
+    private Result<UUID> saveSnippet(UUID snippetId, String formattedContent) {
         try {
-            assetService.saveOriginalSnippet(snippetId, formatId);
-            return new CorrectResult<>(assetService.saveSnippet(snippetId, newContent).getBody());
+            assetService.saveSnippet(snippetId, formattedContent);
+            return new CorrectResult<>(snippetId);
         } catch (Exception e) {
             return new IncorrectResult<>("Failed to save snippet");
         }
